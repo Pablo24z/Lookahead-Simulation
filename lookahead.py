@@ -4,8 +4,11 @@ import random
 def heuristics(a, b, Noise_Level=0):
     """Manhattan Distance"""
     Base = abs(a[0] - b[0]) + abs(a[1] - b[1])
-    Noise = random.uniform(-Noise_Level, Noise_Level)
-    return Base + Noise
+    if Noise_Level > 0:
+        Noise_Factor = 1 + random.uniform(-Noise_Level / 10, Noise_Level / 10)
+        return Base * Noise_Factor
+    return Base
+
 
 def get_Neighbours(pos, grid):
     neighbours = []

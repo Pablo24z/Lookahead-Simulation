@@ -65,7 +65,7 @@ while running:
             elif event.key == pygame.K_RETURN:
                 if grid.start and grid.end:
                     depth_limit = None
-                    Noise_Level = 6
+                    Noise_Level = 10
                     path = A_Star_Search(grid.grid, grid.start, grid.end, depth_limit = depth_limit, Noise_Level= Noise_Level)
                     Log_Path_Metrics(grid.grid, grid.start, grid.end, path)
                     if not path:
