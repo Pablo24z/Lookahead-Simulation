@@ -2,7 +2,7 @@ import csv
 import os
 from datetime import datetime
 
-def Log_Path_Metrics(grid, start, end, path):
+def Log_Path_Metrics(grid, start, end, path, Noise_Level = 0):
     Wall_Count = sum(row.count(1) for row in grid)
     Grid_Size = len(grid) * len(grid[0])
     Success = path is not None
@@ -25,5 +25,5 @@ def Log_Path_Metrics(grid, start, end, path):
     with open("data/Metrics_Log.csv", mode="a", newline="") as f:
         writer = csv.writer(f)
         if not File_Exists:
-             writer.writerow(["Timestamp", " GridSize", " WallCount", " Start", " End", " Success", " PathLength"])
-        writer.writerow([Time , Grid_Size, Wall_Count, start, end, Success, Path_Length])
+             writer.writerow(["Timestamp", " Grid Size", " Wall Count", " Start", " End", " Success", " Path Length", " Noise Level"])
+        writer.writerow([Time , Grid_Size, Wall_Count, start, end, Success, Path_Length, Noise_Level])
