@@ -5,8 +5,8 @@ Status_Bar_Height = 40
 Tile_Size = 40
 Grid_Width = 15
 Grid_Height = 15
-Screen_Width = Tile_Size *Grid_Width
-Screen_Height = Tile_Size *Grid_Height + Status_Bar_Height
+Screen_Width = 1000
+Screen_Height = 800
 
 #Colours
 
