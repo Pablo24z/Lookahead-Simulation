@@ -1,6 +1,7 @@
 import pygame
 import sys
 import random
+import config
 from ui_screens import draw_start_menu, draw_instructions_screen
 from gridworld import GridWorld, Tile_Size, Screen_Height, Screen_Width, Grid_Width, Grid_Height
 from lookahead import A_Star_Search
@@ -8,7 +9,8 @@ from metrics import Log_Path_Metrics
 
 # --- Initialization ---
 pygame.init()
-screen = pygame.display.set_mode((Screen_Width + 200, Screen_Height))
+config.setup_fonts()   # Important: Initialize fonts AFTER pygame.init()
+screen = pygame.display.set_mode((Screen_Width + 400, Screen_Height))
 pygame.display.set_caption("Lookahead Strategy Simulation")
 clock = pygame.time.Clock()
 
@@ -34,10 +36,6 @@ agent_start = None
 agent_end = None
 animation_active = False
 
-# --- Fonts ---
-default_font = pygame.font.SysFont("RobotoMono", 24)
-title_font = pygame.font.SysFont("RobotoMono", 28, bold=True)
-
 # --- Notification States ---
 path_notification = None
 path_notification_timer = 0
@@ -61,7 +59,7 @@ def clear_path():
     else:
         path = []
 
-
+# --- Draw Functions ---
 def draw_grid():
     for row in range(Grid_Height):
         for col in range(Grid_Width):
@@ -90,7 +88,6 @@ def draw_agent():
         center_y = int(row * Tile_Size + Tile_Size // 2)
         pygame.draw.circle(screen, (0, 255, 255), (center_x, center_y), Tile_Size // 4)
 
-
 def draw_hover_highlight():
     mouse_pos = pygame.mouse.get_pos()
     pos = get_grid_position(mouse_pos)
@@ -98,45 +95,40 @@ def draw_hover_highlight():
         row, col = pos
         if 0 <= row < Grid_Height and 0 <= col < Grid_Width:
             hover_rect = pygame.Rect(col * Tile_Size, row * Tile_Size, Tile_Size, Tile_Size)
-            s = pygame.Surface((Tile_Size, Tile_Size), pygame.SRCALPHA)  # Alpha surface
-            # Dynamically change hover color depending on click_mode
-            if click_mode == 0:  # Wall mode
-                s.fill((255, 255, 0, 60))  # Soft yellow
-            elif click_mode == 1:  # Start point
-                s.fill((0, 255, 0, 60))    # Soft green
-            elif click_mode == 2:  # End point
-                s.fill((255, 0, 0, 60))    # Soft red
-
+            s = pygame.Surface((Tile_Size, Tile_Size), pygame.SRCALPHA)
+            if click_mode == 0:
+                s.fill((255, 255, 0, 60))  # Wall mode
+            elif click_mode == 1:
+                s.fill((0, 255, 0, 60))    # Start point
+            elif click_mode == 2:
+                s.fill((255, 0, 0, 60))    # End point
             screen.blit(s, hover_rect.topleft)
 
-
-# --- Update draw_side_panel function ---
 def draw_side_panel():
-    panel_rect = pygame.Rect(Screen_Width - 50, 0, 250, Screen_Height)
+    panel_rect = pygame.Rect(Screen_Width, 0, 400, Screen_Height)
     pygame.draw.rect(screen, (50, 50, 50), panel_rect)
-    
+
     entries = [
         ("Agent", selected_agent.capitalize() if selected_agent else "None"),
         ("Walls", str(sum(row.count(1) for row in grid.grid))),
         ("Path Length", str(len(path)) if path else "0"),
         ("Noise", "5" if selected_agent == "noise" else "0"),
     ]
-    
+
     y_offset = 20
     spacing = 40
     for label, value in entries:
-        label_text = title_font.render(label + ":", True, (255, 255, 255))
-        value_text = default_font.render(value, True, (200, 200, 200))
-        screen.blit(label_text, (Screen_Width - 20, y_offset))
-        screen.blit(value_text, (Screen_Width - 20, y_offset + 25))
+        label_text = config.FONT_BOLD_28.render(label + ":", True, (255, 255, 255))
+        value_text = config.FONT_REGULAR_24.render(value, True, (200, 200, 200))
+        screen.blit(label_text, (Screen_Width + 20, y_offset))
+        screen.blit(value_text, (Screen_Width + 20, y_offset + 25))
         y_offset += spacing + 10
 
     if path_notification and path_notification_timer > 0:
-        notif_text = default_font.render(path_notification, True, path_notification_colour)
-        screen.blit(notif_text, (Screen_Width - 20, y_offset + 20))
-        y_offset += 60  # Add spacing after notification
+        notif_text = config.FONT_REGULAR_24.render(path_notification, True, path_notification_colour)
+        screen.blit(notif_text, (Screen_Width + 20, y_offset + 20))
+        y_offset += 60
 
-    # --- Instructions Section ---
     instruction_entries = [
         "Controls:",
         "SPACE - Switch Mode",
@@ -144,28 +136,28 @@ def draw_side_panel():
     ]
     if selected_agent == "dynamic":
         instruction_entries.append("D - Dynamic Update")
-    
+
     for instruction in instruction_entries:
-        instruction_text = default_font.render(instruction, True, (255, 255, 255))
-        screen.blit(instruction_text, (Screen_Width - 20, y_offset))
+        instruction_text = config.FONT_REGULAR_24.render(instruction, True, (255, 255, 255))
+        screen.blit(instruction_text, (Screen_Width + 20, y_offset))
         y_offset += 30
 
     # --- Back Button ---
-    back_button_rect = pygame.Rect(Screen_Width - 20, Screen_Height - 70, 160, 40)
+    back_button_rect = pygame.Rect(Screen_Width + 120, Screen_Height - 70, 160, 40)
     mouse_pos = pygame.mouse.get_pos()
     is_hovered = back_button_rect.collidepoint(mouse_pos)
-    btn_color = (255, 204, 77) if is_hovered else (249, 168, 37)
+    btn_color = config.Light_Orange if is_hovered else config.Orange
+
     pygame.draw.rect(screen, btn_color, back_button_rect)
     pygame.draw.rect(screen, (255, 255, 255), back_button_rect, 2)
 
-    back_text = default_font.render("Back", True, (0, 0, 0) if is_hovered else (255, 255, 255))
+    back_text = config.FONT_REGULAR_26.render("Back", True, (0, 0, 0) if is_hovered else (255, 255, 255))
     screen.blit(back_text, (
         back_button_rect.centerx - back_text.get_width() // 2,
         back_button_rect.centery - back_text.get_height() // 2
     ))
 
     return back_button_rect
-
 
 
 # --- Main Loop ---
@@ -290,6 +282,15 @@ while running:
                     mouse_held = True
                     if back_button_rect.collidepoint(mouse_pos):
                         screen_mode = "instructions"
+                        trail_tiles.clear()
+                        path.clear()
+                        animation_active = False
+                        agent_start = None
+                        agent_end = None
+                        current_step = 0
+                        interpolation_progress = 0.0
+                        path_notification = None
+                        path_notification_timer = 0
                 elif event.button == 3:  # Right-click
                     mouse_right_held = True
                 pos = get_grid_position(pygame.mouse.get_pos())

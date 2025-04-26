@@ -1,20 +1,20 @@
 import pygame
-from gridworld import Screen_Width
-
+import config
 
 def draw_start_menu(screen):
     screen.fill((30, 30, 30))
-    title_font = pygame.font.Font("assets/fonts/RobotoMono-Bold.ttf", 50)
-    button_font = pygame.font.Font("assets/fonts/RobotoMono-Regular.ttf", 26)
+
+    title_font = config.FONT_BOLD_50
+    button_font = config.FONT_REGULAR_26
 
     title_text = title_font.render("Lookahead Strategy Simulation", True, (255, 255, 255))
     title_y = 120
-    screen.blit(title_text, (Screen_Width // 2 - title_text.get_width() // 2, title_y))
+    screen.blit(title_text, (config.Screen_Width // 2 - title_text.get_width() // 2, title_y))
 
     underline_y = title_y + title_text.get_height() + 5
     pygame.draw.line(screen, (255, 255, 255),
-                     (Screen_Width // 2 - title_text.get_width() // 2, underline_y),
-                     (Screen_Width // 2 + title_text.get_width() // 2, underline_y), 2)
+                     (config.Screen_Width // 2 - title_text.get_width() // 2, underline_y),
+                     (config.Screen_Width // 2 + title_text.get_width() // 2, underline_y), 2)
 
     button_y_start = 250
     button_spacing = 70
@@ -28,12 +28,13 @@ def draw_start_menu(screen):
     button_rects = []
 
     for label, agent_key, y in button_specs:
-        btn_rect = pygame.Rect(Screen_Width // 2 - 250, y, 450, 50)
+        btn_rect = pygame.Rect(config.Screen_Width // 2 - 250, y, 450, 50)
         is_hovered = btn_rect.collidepoint(mouse_pos)
-        btn_color = (255, 204, 77) if is_hovered else (249, 168, 37)
+        btn_color = config.Light_Orange if is_hovered else config.Orange
 
         pygame.draw.rect(screen, btn_color, btn_rect)
         pygame.draw.rect(screen, (255, 255, 255), btn_rect, 2)
+
         text = button_font.render(label, True, (0, 0, 0) if is_hovered else (255, 255, 255))
         screen.blit(text, (
             btn_rect.x + btn_rect.width // 2 - text.get_width() // 2,
@@ -43,11 +44,12 @@ def draw_start_menu(screen):
 
     return button_rects
 
-
 def draw_instructions_screen(screen, agent_key):
     screen.fill((30, 30, 30))
-    title_font = pygame.font.Font("assets/fonts/RobotoMono-Bold.ttf", 40)
-    text_font = pygame.font.Font("assets/fonts/RobotoMono-Regular.ttf", 24)
+
+    title_font = config.FONT_BOLD_40
+    text_font = config.FONT_REGULAR_24
+    button_font = config.FONT_REGULAR_26
 
     agent_titles = {
         "depth": "Depth-Limited Agent",
@@ -62,34 +64,38 @@ def draw_instructions_screen(screen, agent_key):
 
     title_text = title_font.render(agent_titles[agent_key], True, (255, 255, 255))
     title_y = 100
-    screen.blit(title_text, (Screen_Width // 2 - title_text.get_width() // 2, title_y))
+    screen.blit(title_text, (config.Screen_Width // 2 - title_text.get_width() // 2, title_y))
 
     underline_y = title_y + title_text.get_height() + 5
     pygame.draw.line(screen, (255, 255, 255),
-                     (Screen_Width // 2 - title_text.get_width() // 2, underline_y),
-                     (Screen_Width // 2 + title_text.get_width() // 2, underline_y), 2)
+                     (config.Screen_Width // 2 - title_text.get_width() // 2, underline_y),
+                     (config.Screen_Width // 2 + title_text.get_width() // 2, underline_y), 2)
 
     for i, line in enumerate(agent_controls[agent_key]):
         instruction = text_font.render(line, True, (220, 220, 220))
         screen.blit(instruction, (80, underline_y + 40 + i * 35))
 
-    button_font = pygame.font.Font("assets/fonts/RobotoMono-Regular.ttf", 26)
+    mouse_pos = pygame.mouse.get_pos()
+    button_rects = []
+
     button_defs = [
         ("Place Walls Randomly", "random", 360),
         ("Place Walls Manually", "manual", 420),
         ("Main Menu", "menu", 20)
     ]
 
-    mouse_pos = pygame.mouse.get_pos()
-    button_rects = []
-
     for label, action, y in button_defs:
-        btn_rect = pygame.Rect(Screen_Width // 2 - 200, y, 400, 45) if action != "menu" else pygame.Rect(30, y, 250, 35)
+        if action == "menu":
+            btn_rect = pygame.Rect(30, y, 250, 35)
+        else:
+            btn_rect = pygame.Rect(config.Screen_Width // 2 - 200, y, 400, 45)
+
         is_hovered = btn_rect.collidepoint(mouse_pos)
-        btn_color = (255, 204, 77) if is_hovered else (249, 168, 37)
+        btn_color = config.Light_Orange if is_hovered else config.Orange
 
         pygame.draw.rect(screen, btn_color, btn_rect)
         pygame.draw.rect(screen, (255, 255, 255), btn_rect, 2)
+
         text = button_font.render(label, True, (0, 0, 0) if is_hovered else (255, 255, 255))
         screen.blit(text, (
             btn_rect.x + btn_rect.width // 2 - text.get_width() // 2,
