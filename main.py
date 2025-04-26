@@ -22,6 +22,7 @@ click_mode = 0
 click_modes = ["Wall", "Start", "End"]
 path = []
 mouse_held = False
+mouse_right_held = False
 last_dragged_tile = None
 
 # --- Animation States ---
@@ -225,7 +226,10 @@ while running:
                     path = A_Star_Search(grid.grid, grid.start, grid.end)
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                mouse_held = True
+                if event.button == 1:  # Left-click
+                    mouse_held = True
+                elif event.button == 3:  # Right-click
+                    mouse_right_held = True
                 pos = get_grid_position(pygame.mouse.get_pos())
                 if pos:
                     if click_mode == 0:
@@ -246,18 +250,28 @@ while running:
                         animation_active = False
 
             elif event.type == pygame.MOUSEBUTTONUP:
-                mouse_held = False
+                if event.button == 1:
+                    mouse_held = False
+                elif event.button == 3:
+                    mouse_right_held = False
                 last_dragged_tile = None
 
-        if mouse_held and click_mode == 0:
+
+        if (mouse_held or mouse_right_held) and click_mode == 0:
             pos = get_grid_position(pygame.mouse.get_pos())
             if pos and pos != last_dragged_tile:
-                if grid.grid[pos[0]][pos[1]] == 0:  # Only add walls on empty tiles
-                    grid.grid[pos[0]][pos[1]] = 1
+                if mouse_held and grid.grid[pos[0]][pos[1]] == 0:
+                    grid.grid[pos[0]][pos[1]] = 1  # Place wall
                     clear_path()
                     trail_tiles.clear()
                     animation_active = False
-                    last_dragged_tile = pos
+                elif mouse_right_held and grid.grid[pos[0]][pos[1]] == 1:
+                    grid.grid[pos[0]][pos[1]] = 0  # Remove wall
+                    clear_path()
+                    trail_tiles.clear()
+                    animation_active = False
+                last_dragged_tile = pos
+
 
 
     clock.tick(120)
