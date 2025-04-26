@@ -1,7 +1,14 @@
 {
     "cSpell.words": [
+        "blit",
+        "collidepoint",
         "gridworld",
+        "MOUSEBUTTONDOWN",
+        "MOUSEBUTTONUP",
         "neighbour",
-        "Neighbours"
+        "Neighbours",
+        "pathfinding",
+        "rects",
+        "Roboto"
     ]
 }
