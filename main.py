@@ -1,198 +1,127 @@
 import pygame
 import sys
 import random
+from ui_screens import draw_start_menu, draw_instructions_screen
 from gridworld import GridWorld, Tile_Size, Screen_Height, Screen_Width, Grid_Width, Grid_Height
 from lookahead import A_Star_Search
 from metrics import Log_Path_Metrics
 
-# Initialize pygame
+# --- Initialization ---
 pygame.init()
-screen = pygame.display.set_mode((Screen_Width, Screen_Height))
+screen = pygame.display.set_mode((Screen_Width + 200, Screen_Height))
 pygame.display.set_caption("Lookahead Strategy Simulation")
 clock = pygame.time.Clock()
 
-# Modes and state tracking
+# --- Global States ---
 screen_mode = "menu"
-simulation_mode = None
 selected_agent = None
 
-# Grid and interaction
+# --- Grid and Interaction States ---
 grid = GridWorld(Grid_Width, Grid_Height)
 click_mode = 0
-path = []
 click_modes = ["Wall", "Start", "End"]
+path = []
 mouse_held = False
 last_dragged_tile = None
 
-# Animation state
-agent_position = None
-animation_index = 0
-animation_active = False
-animation_speed = 10
+# --- Animation States ---
 trail_tiles = []
+current_step = 0
+interpolation_progress = 0.0
+interpolation_speed = 0.05
+agent_start = None
+agent_end = None
+animation_active = False
 
-# Fonts
-default_font = pygame.font.SysFont(None, 24)
+# --- Fonts ---
+default_font = pygame.font.SysFont("RobotoMono", 24)
+title_font = pygame.font.SysFont("RobotoMono", 28, bold=True)
 
+# --- Notification States ---
+path_notification = None
+path_notification_timer = 0
 
+# --- Helper Functions ---
 def get_grid_position(mouse_pos):
     x, y = mouse_pos
+    if x >= Screen_Width:
+        return None
     row = y // Tile_Size
     col = x // Tile_Size
     if 0 <= row < Grid_Height and 0 <= col < Grid_Width:
         return row, col
     return None
 
+def clear_path():
+    global path
+    if path:
+        path.clear()
+    else:
+        path = []
 
 def draw_mode_status_bar():
-    pygame.draw.rect(screen, (230, 230, 230), (0, Tile_Size * Grid_Height, Screen_Width, 40))
+    pygame.draw.rect(screen, (230, 230, 230), (0, Tile_Size * Grid_Height, Screen_Width + 200, 40))
     mode_text = default_font.render(f"Click Mode: {click_modes[click_mode]}", True, (0, 0, 0))
-    help_text = default_font.render("SPACE = Switch mode | ENTER = Run path | D = Dynamic Event", True, (0, 0, 0))
+    help_text = default_font.render("SPACE: Switch | ENTER: Run | D: Dynamic", True, (0, 0, 0))
     screen.blit(mode_text, (10, Tile_Size * Grid_Height + 5))
-    screen.blit(help_text, (200, Tile_Size * Grid_Height + 5))
+    screen.blit(help_text, (300, Tile_Size * Grid_Height + 5))
 
-
-def draw_simulation_grid():
+def draw_grid():
     for row in range(Grid_Height):
         for col in range(Grid_Width):
-            cell_value = grid.grid[row][col]
             rect = pygame.Rect(col * Tile_Size, row * Tile_Size, Tile_Size, Tile_Size)
-
-            if cell_value == 1:
-                pygame.draw.rect(screen, (40, 40, 40), rect)
-            else:
-                pygame.draw.rect(screen, (240, 240, 240), rect)
-
+            color = (40, 40, 40) if grid.grid[row][col] == 1 else (240, 240, 240)
+            pygame.draw.rect(screen, color, rect)
             pygame.draw.rect(screen, (200, 200, 200), rect, 1)
-
             if (row, col) == grid.start:
                 pygame.draw.circle(screen, (0, 200, 100), rect.center, Tile_Size // 3)
             elif (row, col) == grid.end:
                 pygame.draw.rect(screen, (200, 50, 50), rect.inflate(-Tile_Size // 3, -Tile_Size // 3))
 
-
-def draw_trail(trail):
-    for i, (row, col) in enumerate(trail):
+def draw_trail():
+    for i, (row, col) in enumerate(trail_tiles):
         rect = pygame.Rect(col * Tile_Size, row * Tile_Size, Tile_Size, Tile_Size)
         color = (50, 150, 255 - min(i * 8, 200))
         pygame.draw.rect(screen, color, rect)
 
+def draw_agent():
+    if animation_active and agent_start and agent_end:
+        sr, sc = agent_start
+        er, ec = agent_end
+        row = sr + (er - sr) * interpolation_progress
+        col = sc + (ec - sc) * interpolation_progress
+        center_x = int(col * Tile_Size + Tile_Size // 2)
+        center_y = int(row * Tile_Size + Tile_Size // 2)
+        pygame.draw.circle(screen, (0, 255, 255), (center_x, center_y), Tile_Size // 4)
 
-def draw_agent_icon():
-    if animation_active and agent_position:
-        row, col = agent_position
-        center = (col * Tile_Size + Tile_Size // 2, row * Tile_Size + Tile_Size // 2)
-        pygame.draw.circle(screen, (0, 255, 255), center, Tile_Size // 4)
-
-
-def draw_start_menu():
-    screen.fill((30, 30, 30))
-    title_font = pygame.font.Font("assets/fonts/RobotoMono-Bold.ttf", 50)
-    button_font = pygame.font.Font("assets/fonts/RobotoMono-Regular.ttf", 26)
-
-    title_text = title_font.render("Lookahead Strategy Simulation", True, (255, 255, 255))
-    title_y = 120
-    screen.blit(title_text, (Screen_Width // 2 - title_text.get_width() // 2, title_y))
-
-    underline_y = title_y + title_text.get_height() + 5
-    pygame.draw.line(screen, (255, 255, 255),
-                     (Screen_Width // 2 - title_text.get_width() // 2, underline_y),
-                     (Screen_Width // 2 + title_text.get_width() // 2, underline_y), 2)
-
-    button_y_start = 250
-    button_spacing = 70
-    button_specs = [
-        ("Depth-Limited Agent", "depth", button_y_start),
-        ("Noisy Heuristic Agent", "noise", button_y_start + button_spacing * 2),
-        ("Dynamic Environment Agent", "dynamic", button_y_start + button_spacing * 4),
+# --- Update draw_side_panel function ---
+def draw_side_panel():
+    panel_rect = pygame.Rect(Screen_Width, 0, 200, Screen_Height)
+    pygame.draw.rect(screen, (50, 50, 50), panel_rect)
+    entries = [
+        ("Agent", selected_agent.capitalize() if selected_agent else "None"),
+        ("Walls", str(sum(row.count(1) for row in grid.grid))),
+        ("Path Length", str(len(path)) if path else "0"),
+        ("Noise", "5" if selected_agent == "noise" else "0"),
     ]
-
-    mouse_pos = pygame.mouse.get_pos()
-    button_rects = []
-
-    for label, agent_key, y in button_specs:
-        btn_rect = pygame.Rect(Screen_Width // 2 - 250, y, 450, 50)
-        is_hovered = btn_rect.collidepoint(mouse_pos)
-        btn_color = (255, 204, 77) if is_hovered else (249, 168, 37)
-
-        pygame.draw.rect(screen, btn_color, btn_rect)
-        pygame.draw.rect(screen, (255, 255, 255), btn_rect, 2)
-        text = button_font.render(label, True, (0, 0, 0) if is_hovered else (255, 255, 255))
-        screen.blit(text, (
-            btn_rect.x + btn_rect.width // 2 - text.get_width() // 2,
-            btn_rect.y + btn_rect.height // 2 - text.get_height() // 2
-        ))
-        button_rects.append((btn_rect, label))
-
-    return button_rects
+    y_offset = 20
+    spacing = 40
+    for label, value in entries:
+        label_text = title_font.render(label + ":", True, (255, 255, 255))
+        value_text = default_font.render(value, True, (200, 200, 200))
+        screen.blit(label_text, (Screen_Width + 20, y_offset))
+        screen.blit(value_text, (Screen_Width + 20, y_offset + 25))
+        y_offset += spacing + 10
+    if path_notification and path_notification_timer > 0:
+        notif_text = default_font.render(path_notification, True, (255, 215, 0))
+        screen.blit(notif_text, (Screen_Width + 20, y_offset + 20))
 
 
-def draw_instructions_screen(agent_key):
-    screen.fill((30, 30, 30))
-    title_font = pygame.font.Font("assets/fonts/RobotoMono-Bold.ttf", 40)
-    text_font = pygame.font.Font("assets/fonts/RobotoMono-Regular.ttf", 24)
-
-    agent_titles = {
-        "depth": "Depth-Limited Agent",
-        "noise": "Noisy Heuristic Agent",
-        "dynamic": "Dynamic Environment Agent"
-    }
-    agent_controls = {
-        "depth": ["Press SPACE to switch modes (Wall, Start, End)", "Press ENTER to run the algorithm"],
-        "noise": ["Press SPACE to switch modes", "Press ENTER to run with noisy heuristic (Noise Level = 5)"],
-        "dynamic": ["Press SPACE to switch modes", "Press ENTER to run", "Press D to trigger a dynamic world change"]
-    }
-
-    title_text = title_font.render(agent_titles[agent_key], True, (255, 255, 255))
-    title_y = 100
-    screen.blit(title_text, (Screen_Width // 2 - title_text.get_width() // 2, title_y))
-
-    underline_y = title_y + title_text.get_height() + 5
-    pygame.draw.line(screen, (255, 255, 255),
-                     (Screen_Width // 2 - title_text.get_width() // 2, underline_y),
-                     (Screen_Width // 2 + title_text.get_width() // 2, underline_y), 2)
-
-    for i, line in enumerate(agent_controls[agent_key]):
-        instruction = text_font.render(line, True, (220, 220, 220))
-        screen.blit(instruction, (80, underline_y + 40 + i * 35))
-
-    button_font = pygame.font.Font("assets/fonts/RobotoMono-Regular.ttf", 26)
-    button_defs = [
-        ("Place Walls Randomly", "random", 360),
-        ("Place Walls Manually", "manual", 420),
-        ("Main Menu", "menu", 20)
-    ]
-
-    mouse_pos = pygame.mouse.get_pos()
-    button_rects = []
-
-    for label, action, y in button_defs:
-        btn_rect = pygame.Rect(Screen_Width // 2 - 200, y, 400, 45) if action != "menu" else pygame.Rect(30, y, 250, 35)
-        is_hovered = btn_rect.collidepoint(mouse_pos)
-        btn_color = (255, 204, 77) if is_hovered else (249, 168, 37)
-
-        pygame.draw.rect(screen, btn_color, btn_rect)
-        pygame.draw.rect(screen, (255, 255, 255), btn_rect, 2)
-        text = button_font.render(label, True, (0, 0, 0) if is_hovered else (255, 255, 255))
-        screen.blit(text, (
-            btn_rect.x + btn_rect.width // 2 - text.get_width() // 2,
-            btn_rect.y + btn_rect.height // 2 - text.get_height() // 2
-        ))
-        button_rects.append((btn_rect, action))
-
-    return button_rects
-
-
-
-
-
-# Main loop
+# --- Main Loop ---
 running = True
-frame_counter = 0  # New frame counter for controlling animation speed!
-
 while running:
     if screen_mode == "menu":
-        button_rects = draw_start_menu()
+        button_rects = draw_start_menu(screen)
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -201,17 +130,16 @@ while running:
                 mouse_pos = pygame.mouse.get_pos()
                 for rect, label in button_rects:
                     if rect.collidepoint(mouse_pos):
-                        if label == "Depth-Limited Agent":
+                        if "Depth-Limited" in label:
                             selected_agent = "depth"
-                        elif label == "Noisy Heuristic Agent":
+                        elif "Noisy Heuristic" in label:
                             selected_agent = "noise"
-                        elif label == "Dynamic Environment Agent":
+                        elif "Dynamic Environment" in label:
                             selected_agent = "dynamic"
                         screen_mode = "instructions"
         continue
-
     elif screen_mode == "instructions":
-        button_rects = draw_instructions_screen(selected_agent)
+        button_rects = draw_instructions_screen(screen, selected_agent)
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -237,68 +165,61 @@ while running:
 
     elif screen_mode == "simulation":
         screen.fill((30, 30, 30))
-        draw_simulation_grid()
-        if trail_tiles:
-            draw_trail(trail_tiles)
-        draw_agent_icon()
+        draw_grid()
+        draw_trail()
+        draw_agent()
         draw_mode_status_bar()
+        draw_side_panel()
         pygame.display.flip()
 
-        # Agent walking animation control
-        frame_counter += 1
-        if animation_active and frame_counter >= animation_speed:
-            frame_counter = 0
-            if animation_index < len(path):
-                agent_position = path[animation_index]
-                trail_tiles.append(agent_position)
-                animation_index += 1
-            else:
-                animation_active = False
+        if animation_active:
+            interpolation_progress += interpolation_speed
+            if interpolation_progress >= 1.0:
+                interpolation_progress = 0.0
+                trail_tiles.append(agent_end)
+                current_step += 1
+                if current_step < len(path) - 1:
+                    agent_start = path[current_step]
+                    agent_end = path[current_step + 1]
+                else:
+                    animation_active = False
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-            if event.type == pygame.KEYDOWN:
+            elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     click_mode = (click_mode + 1) % 3
-
                 elif event.key == pygame.K_RETURN:
                     if grid.start and grid.end:
-                        # Clear previous path
-                        trail_tiles = []
-                        animation_index = 0
-                        agent_position = None
-                        animation_active = False
-
-                        depth_limit = None
-                        noise_level = 5
-                        path = A_Star_Search(grid.grid, grid.start, grid.end, Noise_Level=noise_level)
-
-                        if path:
-                            animation_active = True
-                            Log_Path_Metrics(grid.grid, grid.start, grid.end, path, Noise_Level=noise_level)
+                        path = A_Star_Search(grid.grid, grid.start, grid.end, Noise_Level=5)
+                        if grid.start and grid.end:
+                            path = A_Star_Search(grid.grid, grid.start, grid.end, Noise_Level=5)
+                            if path and len(path) > 1:
+                                trail_tiles.clear()
+                                trail_tiles.append(path[0])
+                                current_step = 0
+                                agent_start = path[0]
+                                agent_end = path[1]
+                                interpolation_progress = 0.0
+                                animation_active = True
+                                path_notification = "Path Found!"
+                                path_notification_timer = 180
+                                Log_Path_Metrics(grid.grid, grid.start, grid.end, path, Noise_Level=5)
+                            else:
+                                path_notification = "No Path Found"
+                                path_notification_timer = 180
                         else:
-                            print("Path Could Not be Found!")
-
+                            path_notification = "No Path Found"
+                            path_notification_timer = 180
                 elif event.key == pygame.K_d and selected_agent == "dynamic":
                     for _ in range(10):
                         r = random.randint(0, Grid_Height - 1)
                         c = random.randint(0, Grid_Width - 1)
                         if (r, c) != grid.start and (r, c) != grid.end:
                             grid.grid[r][c] = 1
-
-                    # After world changes, re-run pathfinding
-                    trail_tiles = []
-                    animation_index = 0
-                    agent_position = None
-                    animation_active = False
-
                     path = A_Star_Search(grid.grid, grid.start, grid.end)
-                    if path:
-                        animation_active = True
-                    else:
-                        print("No Path can be Found after world shift!")
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_held = True
@@ -306,20 +227,20 @@ while running:
                 if pos:
                     if click_mode == 0:
                         grid.Toggle_Wall(pos)
-                        path = []
+                        clear_path()
+                        trail_tiles.clear()
                         animation_active = False
-                        trail_tiles = []
                         last_dragged_tile = pos
                     elif click_mode == 1:
                         grid.start = pos
-                        path = []
+                        clear_path()
+                        trail_tiles.clear()
                         animation_active = False
-                        trail_tiles = []
                     elif click_mode == 2:
                         grid.end = pos
-                        path = []
+                        clear_path()
+                        trail_tiles.clear()
                         animation_active = False
-                        trail_tiles = []
 
             elif event.type == pygame.MOUSEBUTTONUP:
                 mouse_held = False
@@ -329,13 +250,12 @@ while running:
             pos = get_grid_position(pygame.mouse.get_pos())
             if pos and pos != last_dragged_tile:
                 grid.Toggle_Wall(pos)
-                path = []
+                clear_path()
+                trail_tiles.clear()
                 animation_active = False
-                trail_tiles = []
                 last_dragged_tile = pos
 
     clock.tick(60)
 
 pygame.quit()
 sys.exit()
-
