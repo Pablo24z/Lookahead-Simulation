@@ -219,6 +219,9 @@ while running:
                         c = random.randint(0, Grid_Width - 1)
                         if (r, c) != grid.start and (r, c) != grid.end:
                             grid.grid[r][c] = 1
+                    clear_path()
+                    trail_tiles.clear()
+                    animation_active = False
                     path = A_Star_Search(grid.grid, grid.start, grid.end)
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -249,13 +252,15 @@ while running:
         if mouse_held and click_mode == 0:
             pos = get_grid_position(pygame.mouse.get_pos())
             if pos and pos != last_dragged_tile:
-                grid.Toggle_Wall(pos)
-                clear_path()
-                trail_tiles.clear()
-                animation_active = False
-                last_dragged_tile = pos
+                if grid.grid[pos[0]][pos[1]] == 0:  # Only add walls on empty tiles
+                    grid.grid[pos[0]][pos[1]] = 1
+                    clear_path()
+                    trail_tiles.clear()
+                    animation_active = False
+                    last_dragged_tile = pos
 
-    clock.tick(60)
+
+    clock.tick(120)
 
 pygame.quit()
 sys.exit()
