@@ -95,6 +95,28 @@ def draw_agent():
         center_y = int(row * Tile_Size + Tile_Size // 2)
         pygame.draw.circle(screen, (0, 255, 255), (center_x, center_y), Tile_Size // 4)
 
+
+def draw_hover_highlight():
+    mouse_pos = pygame.mouse.get_pos()
+    pos = get_grid_position(mouse_pos)
+    if pos:
+        row, col = pos
+        if 0 <= row < Grid_Height and 0 <= col < Grid_Width:
+            hover_rect = pygame.Rect(col * Tile_Size, row * Tile_Size, Tile_Size, Tile_Size)
+            s = pygame.Surface((Tile_Size, Tile_Size), pygame.SRCALPHA)  # Alpha surface
+            # Dynamically change hover color depending on click_mode
+            if click_mode == 0:  # Wall mode
+                s.fill((255, 255, 0, 60))  # Soft yellow
+            elif click_mode == 1:  # Start point
+                s.fill((0, 255, 0, 60))    # Soft green
+            elif click_mode == 2:  # End point
+                s.fill((255, 0, 0, 60))    # Soft red
+
+            screen.blit(s, hover_rect.topleft)
+
+
+
+
 # --- Update draw_side_panel function ---
 def draw_side_panel():
     panel_rect = pygame.Rect(Screen_Width, 0, 200, Screen_Height)
@@ -171,6 +193,7 @@ while running:
         draw_agent()
         draw_mode_status_bar()
         draw_side_panel()
+        draw_hover_highlight()
         pygame.display.flip()
 
         if animation_active:
@@ -193,27 +216,26 @@ while running:
                 if event.key == pygame.K_SPACE:
                     click_mode = (click_mode + 1) % 3
                 elif event.key == pygame.K_RETURN:
-                    if grid.start and grid.end:
-                        path = A_Star_Search(grid.grid, grid.start, grid.end, Noise_Level=5)
-                        if grid.start and grid.end:
-                            path = A_Star_Search(grid.grid, grid.start, grid.end, Noise_Level=5)
-                            if path and len(path) > 1:
-                                trail_tiles.clear()
-                                trail_tiles.append(path[0])
-                                current_step = 0
-                                agent_start = path[0]
-                                agent_end = path[1]
-                                interpolation_progress = 0.0
-                                animation_active = True
-                                path_notification = "Path Found!"
-                                path_notification_timer = 180
-                                Log_Path_Metrics(grid.grid, grid.start, grid.end, path, Noise_Level=5)
-                            else:
-                                path_notification = "No Path Found"
-                                path_notification_timer = 180
+                    if grid.start and grid.end and grid.start != grid.end:
+                        temp_path = A_Star_Search(grid.grid, grid.start, grid.end, Noise_Level=5)
+                        if temp_path is not None and len(temp_path) >= 2:
+                            path = temp_path  # Only set the path if it's valid!
+                            trail_tiles.clear()
+                            trail_tiles.append(path[0])
+                            current_step = 0
+                            agent_start = path[0]
+                            agent_end = path[1]
+                            interpolation_progress = 0.0
+                            animation_active = True
+                            path_notification = "Path Found!"
+                            path_notification_timer = 180
+                            Log_Path_Metrics(grid.grid, grid.start, grid.end, path, Noise_Level=5)
                         else:
                             path_notification = "No Path Found"
                             path_notification_timer = 180
+                    else:
+                        path_notification = "Invalid Start/End!"
+                        path_notification_timer = 180
                 elif event.key == pygame.K_d and selected_agent == "dynamic":
                     for _ in range(10):
                         r = random.randint(0, Grid_Height - 1)
@@ -239,15 +261,17 @@ while running:
                         animation_active = False
                         last_dragged_tile = pos
                     elif click_mode == 1:
-                        grid.start = pos
-                        clear_path()
-                        trail_tiles.clear()
-                        animation_active = False
+                        if grid.grid[pos[0]][pos[1]] == 0 and pos != grid.end:
+                            grid.start = pos
+                            clear_path()
+                            trail_tiles.clear()
+                            animation_active = False
                     elif click_mode == 2:
-                        grid.end = pos
-                        clear_path()
-                        trail_tiles.clear()
-                        animation_active = False
+                        if grid.grid[pos[0]][pos[1]] == 0 and pos != grid.start:
+                            grid.end = pos
+                            clear_path()
+                            trail_tiles.clear()
+                            animation_active = False
 
             elif event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1:
