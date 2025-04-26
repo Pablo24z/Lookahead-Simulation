@@ -41,6 +41,7 @@ title_font = pygame.font.SysFont("RobotoMono", 28, bold=True)
 # --- Notification States ---
 path_notification = None
 path_notification_timer = 0
+path_notification_colour = (255, 215, 0)
 
 # --- Helper Functions ---
 def get_grid_position(mouse_pos):
@@ -115,8 +116,6 @@ def draw_hover_highlight():
             screen.blit(s, hover_rect.topleft)
 
 
-
-
 # --- Update draw_side_panel function ---
 def draw_side_panel():
     panel_rect = pygame.Rect(Screen_Width, 0, 200, Screen_Height)
@@ -136,7 +135,7 @@ def draw_side_panel():
         screen.blit(value_text, (Screen_Width + 20, y_offset + 25))
         y_offset += spacing + 10
     if path_notification and path_notification_timer > 0:
-        notif_text = default_font.render(path_notification, True, (255, 215, 0))
+        notif_text = default_font.render(path_notification, True, path_notification_colour)
         screen.blit(notif_text, (Screen_Width + 20, y_offset + 20))
 
 
@@ -217,24 +216,34 @@ while running:
                     click_mode = (click_mode + 1) % 3
                 elif event.key == pygame.K_RETURN:
                     if grid.start and grid.end and grid.start != grid.end:
-                        temp_path = A_Star_Search(grid.grid, grid.start, grid.end, Noise_Level=5)
-                        if temp_path is not None and len(temp_path) >= 2:
-                            path = temp_path  # Only set the path if it's valid!
-                            trail_tiles.clear()
-                            trail_tiles.append(path[0])
-                            current_step = 0
-                            agent_start = path[0]
-                            agent_end = path[1]
-                            interpolation_progress = 0.0
-                            animation_active = True
-                            path_notification = "Path Found!"
+                        # Check if start and end are directly adjacent
+                        if (abs(grid.start[0] - grid.end[0]) == 1 and grid.start[1] == grid.end[1]) or \
+                        (abs(grid.start[1] - grid.end[1]) == 1 and grid.start[0] == grid.end[0]):
+                            path_notification = "Too Close!"
+                            path_notification_colour = (255, 50, 50) # Red
                             path_notification_timer = 180
-                            Log_Path_Metrics(grid.grid, grid.start, grid.end, path, Noise_Level=5)
                         else:
-                            path_notification = "No Path Found"
-                            path_notification_timer = 180
+                            temp_path = A_Star_Search(grid.grid, grid.start, grid.end, Noise_Level=5)
+                            if temp_path is not None and len(temp_path) >= 2:
+                                path = temp_path
+                                trail_tiles.clear()
+                                trail_tiles.append(path[0])
+                                current_step = 0
+                                agent_start = path[0]
+                                agent_end = path[1]
+                                interpolation_progress = 0.0
+                                animation_active = True
+                                path_notification = "Path Found!"
+                                path_notification_colour = (0, 255, 0) # Green
+                                path_notification_timer = 180
+                                Log_Path_Metrics(grid.grid, grid.start, grid.end, path, Noise_Level=5)
+                            else:
+                                path_notification = "No Path Found!"
+                                path_notification_colour = (255, 50, 50)
+                                path_notification_timer = 180
                     else:
                         path_notification = "Invalid Start/End!"
+                        path_notification_colour = (255, 50, 50)
                         path_notification_timer = 180
                 elif event.key == pygame.K_d and selected_agent == "dynamic":
                     for _ in range(10):
