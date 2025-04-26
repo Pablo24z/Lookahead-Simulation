@@ -61,12 +61,6 @@ def clear_path():
     else:
         path = []
 
-def draw_mode_status_bar():
-    pygame.draw.rect(screen, (230, 230, 230), (0, Tile_Size * Grid_Height, Screen_Width + 200, 40))
-    mode_text = default_font.render(f"Click Mode: {click_modes[click_mode]}", True, (0, 0, 0))
-    help_text = default_font.render("SPACE: Switch | ENTER: Run | D: Dynamic", True, (0, 0, 0))
-    screen.blit(mode_text, (10, Tile_Size * Grid_Height + 5))
-    screen.blit(help_text, (300, Tile_Size * Grid_Height + 5))
 
 def draw_grid():
     for row in range(Grid_Height):
@@ -118,25 +112,60 @@ def draw_hover_highlight():
 
 # --- Update draw_side_panel function ---
 def draw_side_panel():
-    panel_rect = pygame.Rect(Screen_Width, 0, 200, Screen_Height)
+    panel_rect = pygame.Rect(Screen_Width - 50, 0, 250, Screen_Height)
     pygame.draw.rect(screen, (50, 50, 50), panel_rect)
+    
     entries = [
         ("Agent", selected_agent.capitalize() if selected_agent else "None"),
         ("Walls", str(sum(row.count(1) for row in grid.grid))),
         ("Path Length", str(len(path)) if path else "0"),
         ("Noise", "5" if selected_agent == "noise" else "0"),
     ]
+    
     y_offset = 20
     spacing = 40
     for label, value in entries:
         label_text = title_font.render(label + ":", True, (255, 255, 255))
         value_text = default_font.render(value, True, (200, 200, 200))
-        screen.blit(label_text, (Screen_Width + 20, y_offset))
-        screen.blit(value_text, (Screen_Width + 20, y_offset + 25))
+        screen.blit(label_text, (Screen_Width - 20, y_offset))
+        screen.blit(value_text, (Screen_Width - 20, y_offset + 25))
         y_offset += spacing + 10
+
     if path_notification and path_notification_timer > 0:
         notif_text = default_font.render(path_notification, True, path_notification_colour)
-        screen.blit(notif_text, (Screen_Width + 20, y_offset + 20))
+        screen.blit(notif_text, (Screen_Width - 20, y_offset + 20))
+        y_offset += 60  # Add spacing after notification
+
+    # --- Instructions Section ---
+    instruction_entries = [
+        "Controls:",
+        "SPACE - Switch Mode",
+        "ENTER - Run Simulation"
+    ]
+    if selected_agent == "dynamic":
+        instruction_entries.append("D - Dynamic Update")
+    
+    for instruction in instruction_entries:
+        instruction_text = default_font.render(instruction, True, (255, 255, 255))
+        screen.blit(instruction_text, (Screen_Width - 20, y_offset))
+        y_offset += 30
+
+    # --- Back Button ---
+    back_button_rect = pygame.Rect(Screen_Width - 20, Screen_Height - 70, 160, 40)
+    mouse_pos = pygame.mouse.get_pos()
+    is_hovered = back_button_rect.collidepoint(mouse_pos)
+    btn_color = (255, 204, 77) if is_hovered else (249, 168, 37)
+    pygame.draw.rect(screen, btn_color, back_button_rect)
+    pygame.draw.rect(screen, (255, 255, 255), back_button_rect, 2)
+
+    back_text = default_font.render("Back", True, (0, 0, 0) if is_hovered else (255, 255, 255))
+    screen.blit(back_text, (
+        back_button_rect.centerx - back_text.get_width() // 2,
+        back_button_rect.centery - back_text.get_height() // 2
+    ))
+
+    return back_button_rect
+
 
 
 # --- Main Loop ---
@@ -190,8 +219,7 @@ while running:
         draw_grid()
         draw_trail()
         draw_agent()
-        draw_mode_status_bar()
-        draw_side_panel()
+        back_button_rect = draw_side_panel()
         draw_hover_highlight()
         pygame.display.flip()
 
@@ -257,8 +285,11 @@ while running:
                     path = A_Star_Search(grid.grid, grid.start, grid.end)
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
                 if event.button == 1:  # Left-click
                     mouse_held = True
+                    if back_button_rect.collidepoint(mouse_pos):
+                        screen_mode = "instructions"
                 elif event.button == 3:  # Right-click
                     mouse_right_held = True
                 pos = get_grid_position(pygame.mouse.get_pos())
