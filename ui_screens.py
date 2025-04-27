@@ -44,12 +44,10 @@ def draw_start_menu(screen):
 
     return button_rects
 
-def draw_instructions_screen(screen, agent_key):
-    screen.fill((30, 30, 30))
+# Updated draw_instructions_screen
 
-    title_font = config.FONT_BOLD_40
-    text_font = config.FONT_REGULAR_24
-    button_font = config.FONT_REGULAR_26
+def draw_instructions_screen(screen, agent_key, depth_value, noise_value):
+    screen.fill((30, 30, 30))
 
     agent_titles = {
         "depth": "Depth-Limited Agent",
@@ -62,22 +60,68 @@ def draw_instructions_screen(screen, agent_key):
         "dynamic": ["Press SPACE to switch modes", "Press ENTER to run", "Press D to trigger a dynamic world change"]
     }
 
-    title_text = title_font.render(agent_titles[agent_key], True, (255, 255, 255))
+    # --- Title ---
+    title_text = config.FONT_BOLD_40.render(agent_titles[agent_key], True, (255, 255, 255))
     title_y = 100
     screen.blit(title_text, (config.Screen_Width // 2 - title_text.get_width() // 2, title_y))
 
+    # --- Underline ---
     underline_y = title_y + title_text.get_height() + 5
     pygame.draw.line(screen, (255, 255, 255),
                      (config.Screen_Width // 2 - title_text.get_width() // 2, underline_y),
                      (config.Screen_Width // 2 + title_text.get_width() // 2, underline_y), 2)
 
-    for i, line in enumerate(agent_controls[agent_key]):
-        instruction = text_font.render(line, True, (220, 220, 220))
-        screen.blit(instruction, (80, underline_y + 40 + i * 35))
+    # --- Controls Text ---
+    y_offset = underline_y + 40
+    for line in agent_controls[agent_key]:
+        instruction = config.FONT_REGULAR_24.render(line, True, (220, 220, 220))
+        screen.blit(instruction, (80, y_offset))
+        y_offset += 35
 
     mouse_pos = pygame.mouse.get_pos()
     button_rects = []
 
+    # --- Depth Value (only for Depth Agent) ---
+    if agent_key == "depth":
+        depth_text = config.FONT_REGULAR_24.render(f"Depth: {depth_value}", True, (255, 255, 255))
+        screen.blit(depth_text, (config.Screen_Width // 2 - depth_text.get_width() // 2, y_offset + 20))
+
+        # + Button
+        plus_rect = pygame.Rect(config.Screen_Width // 2 + 80, y_offset + 20, 30, 30)
+        pygame.draw.rect(screen, config.Light_Orange if plus_rect.collidepoint(mouse_pos) else config.Orange, plus_rect)
+        plus_symbol = config.FONT_REGULAR_26.render("+", True, (0, 0, 0))
+        screen.blit(plus_symbol, (plus_rect.x + plus_rect.width // 2 - plus_symbol.get_width() // 2, plus_rect.y + plus_rect.height // 2 - plus_symbol.get_height() // 2))
+
+        # - Button
+        minus_rect = pygame.Rect(config.Screen_Width // 2 - 110, y_offset + 20, 30, 30)
+        pygame.draw.rect(screen, config.Light_Orange if minus_rect.collidepoint(mouse_pos) else config.Orange, minus_rect)
+        minus_symbol = config.FONT_REGULAR_26.render("-", True, (0, 0, 0))
+        screen.blit(minus_symbol, (minus_rect.x + minus_rect.width // 2 - minus_symbol.get_width() // 2, minus_rect.y + minus_rect.height // 2 - minus_symbol.get_height() // 2))
+
+        button_rects.append((plus_rect, "increase_depth"))
+        button_rects.append((minus_rect, "decrease_depth"))
+
+    if agent_key == "noise":
+        noise_text = config.FONT_REGULAR_24.render(f"Noise: {noise_value}", True, (255, 255, 255))
+        screen.blit(noise_text, (config.Screen_Width // 2 - noise_text.get_width() // 2, y_offset + 20))
+
+        # + Button
+        plus_rect = pygame.Rect(config.Screen_Width // 2 + 80, y_offset + 20, 30, 30)
+        pygame.draw.rect(screen, config.Light_Orange if plus_rect.collidepoint(mouse_pos) else config.Orange, plus_rect)
+        plus_symbol = config.FONT_REGULAR_26.render("+", True, (0, 0, 0))
+        screen.blit(plus_symbol, (plus_rect.x + plus_rect.width // 2 - plus_symbol.get_width() // 2, plus_rect.y + plus_rect.height // 2 - plus_symbol.get_height() // 2))
+
+        # - Button
+        minus_rect = pygame.Rect(config.Screen_Width // 2 - 110, y_offset + 20, 30, 30)
+        pygame.draw.rect(screen, config.Light_Orange if minus_rect.collidepoint(mouse_pos) else config.Orange, minus_rect)
+        minus_symbol = config.FONT_REGULAR_26.render("-", True, (0, 0, 0))
+        screen.blit(minus_symbol, (minus_rect.x + minus_rect.width // 2 - minus_symbol.get_width() // 2, minus_rect.y + minus_rect.height // 2 - minus_symbol.get_height() // 2))
+
+        button_rects.append((plus_rect, "increase_noise"))
+        button_rects.append((minus_rect, "decrease_noise"))
+
+
+    # --- Main Buttons ---
     button_defs = [
         ("Place Walls Randomly", "random", 360),
         ("Place Walls Manually", "manual", 420),
@@ -96,7 +140,7 @@ def draw_instructions_screen(screen, agent_key):
         pygame.draw.rect(screen, btn_color, btn_rect)
         pygame.draw.rect(screen, (255, 255, 255), btn_rect, 2)
 
-        text = button_font.render(label, True, (0, 0, 0) if is_hovered else (255, 255, 255))
+        text = config.FONT_REGULAR_26.render(label, True, (0, 0, 0) if is_hovered else (255, 255, 255))
         screen.blit(text, (
             btn_rect.x + btn_rect.width // 2 - text.get_width() // 2,
             btn_rect.y + btn_rect.height // 2 - text.get_height() // 2

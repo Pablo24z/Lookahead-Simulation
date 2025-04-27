@@ -17,6 +17,8 @@ clock = pygame.time.Clock()
 # --- Global States ---
 screen_mode = "menu"
 selected_agent = None
+depth_value = 5
+noise_value = 5
 
 # --- Grid and Interaction States ---
 grid = GridWorld(Grid_Width, Grid_Height)
@@ -112,8 +114,13 @@ def draw_side_panel():
         ("Agent", selected_agent.capitalize() if selected_agent else "None"),
         ("Walls", str(sum(row.count(1) for row in grid.grid))),
         ("Path Length", str(len(path)) if path else "0"),
-        ("Noise", "5" if selected_agent == "noise" else "0"),
     ]
+
+    if selected_agent == "depth":
+        entries.append(("Depth Limit", str(depth_value)))
+
+    if selected_agent == "noise":
+        entries.append(("Noise Level", str(noise_value)))
 
     y_offset = 20
     spacing = 40
@@ -182,7 +189,7 @@ while running:
                         screen_mode = "instructions"
         continue
     elif screen_mode == "instructions":
-        button_rects = draw_instructions_screen(screen, selected_agent)
+        button_rects = draw_instructions_screen(screen, selected_agent, depth_value, noise_value)
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -191,7 +198,15 @@ while running:
                 mouse_pos = pygame.mouse.get_pos()
                 for rect, action in button_rects:
                     if rect.collidepoint(mouse_pos):
-                        if action == "random":
+                        if action == "increase_depth":
+                            depth_value = min(depth_value + 1, 20) # Max depth is 20
+                        elif action == "decrease_depth":
+                            depth_value = max(depth_value - 1, 1) # Minimum depth is 1
+                        elif action == "increase_noise":
+                            noise_value = min(noise_value + 1, 10) # Max Noise Level is 10
+                        elif action == "decrease_noise":
+                            noise_value = max(noise_value - 1, 0) # Minimum Noise Level is 0
+                        elif action == "random":
                             grid = GridWorld(Grid_Width, Grid_Height)
                             for _ in range(85):
                                 r = random.randint(0, Grid_Height - 1)
@@ -236,15 +251,34 @@ while running:
                     click_mode = (click_mode + 1) % 3
                 elif event.key == pygame.K_RETURN:
                     if grid.start and grid.end and grid.start != grid.end:
+                        log_noise = noise_value if selected_agent == "noise" else None
+                        log_depth = depth_value if selected_agent == "depth" else None
                         # Check if start and end are directly adjacent
                         if (abs(grid.start[0] - grid.end[0]) == 1 and grid.start[1] == grid.end[1]) or \
-                        (abs(grid.start[1] - grid.end[1]) == 1 and grid.start[0] == grid.end[0]):
+                            (abs(grid.start[1] - grid.end[1]) == 1 and grid.start[0] == grid.end[0]):
                             path_notification = "Too Close!"
-                            path_notification_colour = (255, 50, 50) # Red
+                            path_notification_colour = (255, 50, 50)  # Red
                             path_notification_timer = 180
+                            Log_Path_Metrics(
+                                grid.grid,
+                                grid.start,
+                                grid.end,
+                                None,  # No path possible
+                                Agent_Type=selected_agent,
+                                Noise_Level=log_noise,
+                                Max_Depth=log_depth,
+                                Success=False
+                            )
+
                         else:
-                            temp_path = A_Star_Search(grid.grid, grid.start, grid.end, Noise_Level=5)
+                            if selected_agent == "depth":
+                                temp_path = A_Star_Search(grid.grid, grid.start, grid.end, Noise_Level=None, Max_Depth = depth_value)
+                            elif selected_agent == "noise":
+                                temp_path = A_Star_Search(grid.grid, grid.start, grid.end, Noise_Level=noise_value, Max_Depth = None)
+                            elif selected_agent == "dynamic":
+                                temp_path = A_Star_Search(grid.grid, grid.start, grid.end, Noise_Level=None, Max_Depth = None)
                             if temp_path is not None and len(temp_path) >= 2:
+                                # Successful path found
                                 path = temp_path
                                 trail_tiles.clear()
                                 trail_tiles.append(path[0])
@@ -254,13 +288,20 @@ while running:
                                 interpolation_progress = 0.0
                                 animation_active = True
                                 path_notification = "Path Found!"
-                                path_notification_colour = (0, 255, 0) # Green
+                                path_notification_colour = (0, 255, 0)  # Green
                                 path_notification_timer = 180
-                                Log_Path_Metrics(grid.grid, grid.start, grid.end, path, Noise_Level=5)
+                                Log_Path_Metrics(grid.grid, grid.start, grid.end, path, Agent_Type=selected_agent, Noise_Level=log_noise, Max_Depth=log_depth, Success=True)
+
                             else:
-                                path_notification = "No Path Found!"
+                                # Path not found
+                                if selected_agent == "depth":
+                                    path_notification = "Path Blocked (Due to Depth Limit!)"
+                                else:
+                                    path_notification = "No Path Found!"
                                 path_notification_colour = (255, 50, 50)
                                 path_notification_timer = 180
+                                Log_Path_Metrics(grid.grid, grid.start, grid.end, path, Agent_Type=selected_agent, Noise_Level=log_noise, Max_Depth=log_depth, Success=False)
+
                     else:
                         path_notification = "Invalid Start/End!"
                         path_notification_colour = (255, 50, 50)
