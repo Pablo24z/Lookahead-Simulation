@@ -1,0 +1,4 @@
+Start,End,Walls,Path Length,Agent Type,Noise Level,Max Depth,Success,Timestamp
+"(6, 0)","(3, 10)",70,14,Dynamic,N/A,N/A,Yes,2025-04-27 06:28:30
+"(6, 0)","(5, 10)",70,12,Dynamic,N/A,N/A,Yes,2025-04-27 06:28:44
+"(6, 0)","(2, 0)",77,-1,Dynamic,N/A,N/A,No,2025-04-27 06:28:47

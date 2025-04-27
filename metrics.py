@@ -2,28 +2,34 @@ import csv
 import os
 from datetime import datetime
 
-def Log_Path_Metrics(grid, start, end, path, Noise_Level = 0):
-    Wall_Count = sum(row.count(1) for row in grid)
-    Grid_Size = len(grid) * len(grid[0])
-    Success = path is not None
-    Path_Length = len(path) if path else 0
-    Time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+def Log_Path_Metrics(grid, start, end, path, Agent_Type="Unknown", Noise_Level=0, Max_Depth=None, Success=True):
+    # Prepare the folder
+    if not os.path.exists("data"):
+        os.makedirs("data")
+    
+    filename = f"data/{Agent_Type.lower()}_metrics.csv"
 
-    #Printing to terminal
+    walls = sum(row.count(1) for row in grid)
+    path_length = len(path) if path else -1  # -1 if no path
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    # Write headers only if file is new
+    write_header = not os.path.exists(filename)
 
-    print(f"[{Time}] Run Summary:")
-    print(f"  Grid size: {Grid_Size} tiles")
-    print(f"  Walls: {Wall_Count}")
-    print(f"  Start: {start}, End: {end}")
-    print(f"  Success: {Success}")
-    print(f"  Path length: {Path_Length}")
-
-    File_Path = "data/Metrics_Log.csv"
-    File_Exists = os.path.isfile(File_Path)
-
-    #saving to csv file
-    with open("data/Metrics_Log.csv", mode="a", newline="") as f:
-        writer = csv.writer(f)
-        if not File_Exists:
-             writer.writerow(["Timestamp", " Grid Size", " Wall Count", " Start", " End", " Success", " Path Length", " Noise Level"])
-        writer.writerow([Time , Grid_Size, Wall_Count, start, end, Success, Path_Length, Noise_Level])
+    with open(filename, mode="a", newline="") as file:
+        writer = csv.writer(file)
+        
+        if write_header:
+            writer.writerow(["Start", "End", "Walls", "Path Length", "Agent Type", "Noise Level", "Max Depth", "Success", "Timestamp"])
+        
+        writer.writerow([
+            start,
+            end,
+            walls,
+            path_length,
+            Agent_Type.capitalize(),
+            Noise_Level if Noise_Level else "N/A",
+            Max_Depth if Max_Depth is not None else "N/A",
+            "Yes" if Success else "No",
+            timestamp
+        ])
