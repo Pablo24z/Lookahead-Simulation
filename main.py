@@ -1,11 +1,14 @@
 import pygame
 import sys
 import random
+import time
 import config
 from ui_screens import draw_start_menu, draw_instructions_screen
-from gridworld import GridWorld, Tile_Size, Screen_Height, Screen_Width, Grid_Width, Grid_Height
+from gridworld import GridWorld
+from config import Tile_Size, Screen_Height, Screen_Width, Grid_Width, Grid_Height
 from lookahead import A_Star_Search
 from metrics import Log_Path_Metrics
+
 
 # --- Initialization ---
 pygame.init()
@@ -19,6 +22,8 @@ screen_mode = "menu"
 selected_agent = None
 depth_value = 5
 noise_value = 5
+nodes_explored = 0
+search_time = 0
 
 # --- Grid and Interaction States ---
 grid = GridWorld(Grid_Width, Grid_Height)
@@ -33,7 +38,7 @@ last_dragged_tile = None
 trail_tiles = []
 current_step = 0
 interpolation_progress = 0.0
-interpolation_speed = 0.05
+interpolation_speed = 0.03
 agent_start = None
 agent_end = None
 animation_active = False
@@ -56,7 +61,7 @@ def get_grid_position(mouse_pos):
 
 def clear_path():
     global path
-    if path:
+    if isinstance(path, list):
         path.clear()
     else:
         path = []
@@ -66,13 +71,21 @@ def draw_grid():
     for row in range(Grid_Height):
         for col in range(Grid_Width):
             rect = pygame.Rect(col * Tile_Size, row * Tile_Size, Tile_Size, Tile_Size)
-            color = (40, 40, 40) if grid.grid[row][col] == 1 else (240, 240, 240)
+            tile_type = grid.grid[row][col]
+
+            # --- Base Tile Color ---
+            color = (40, 40, 40) if tile_type == 1 else (240, 240, 240)
             pygame.draw.rect(screen, color, rect)
-            pygame.draw.rect(screen, (200, 200, 200), rect, 1)
+            pygame.draw.rect(screen, (180, 180, 180), rect, 1)  # Light grid lines
+
+            # --- Special Start and End Points ---
             if (row, col) == grid.start:
                 pygame.draw.circle(screen, (0, 200, 100), rect.center, Tile_Size // 3)
+                pygame.draw.rect(screen, (0, 255, 0), rect, 3)  # Green thick border
             elif (row, col) == grid.end:
                 pygame.draw.rect(screen, (200, 50, 50), rect.inflate(-Tile_Size // 3, -Tile_Size // 3))
+                pygame.draw.rect(screen, (255, 0, 0), rect, 3)  # Red thick border
+
 
 def draw_trail():
     for i, (row, col) in enumerate(trail_tiles):
@@ -114,6 +127,8 @@ def draw_side_panel():
         ("Agent", selected_agent.capitalize() if selected_agent else "None"),
         ("Walls", str(sum(row.count(1) for row in grid.grid))),
         ("Path Length", str(len(path)) if path else "0"),
+        ("Nodes Explored", str(nodes_explored)),
+        ("Search Time", f"{search_time:.6f} s"),
     ]
 
     if selected_agent == "depth":
@@ -250,6 +265,7 @@ while running:
                 if event.key == pygame.K_SPACE:
                     click_mode = (click_mode + 1) % 3
                 elif event.key == pygame.K_RETURN:
+                    start_time = time.perf_counter()
                     if grid.start and grid.end and grid.start != grid.end:
                         log_noise = noise_value if selected_agent == "noise" else None
                         log_depth = depth_value if selected_agent == "depth" else None
@@ -267,16 +283,21 @@ while running:
                                 Agent_Type=selected_agent,
                                 Noise_Level=log_noise,
                                 Max_Depth=log_depth,
-                                Success=False
+                                Success=False,
+                                Nodes_Explored=nodes_explored,
+                                Search_Time=search_time
                             )
 
                         else:
                             if selected_agent == "depth":
-                                temp_path = A_Star_Search(grid.grid, grid.start, grid.end, Noise_Level=None, Max_Depth = depth_value)
+                                temp_path, nodes_explored = A_Star_Search(grid.grid, grid.start, grid.end, Noise_Level=None, Max_Depth = depth_value)
                             elif selected_agent == "noise":
-                                temp_path = A_Star_Search(grid.grid, grid.start, grid.end, Noise_Level=noise_value, Max_Depth = None)
+                                temp_path, nodes_explored = A_Star_Search(grid.grid, grid.start, grid.end, Noise_Level=noise_value, Max_Depth = None)
                             elif selected_agent == "dynamic":
-                                temp_path = A_Star_Search(grid.grid, grid.start, grid.end, Noise_Level=None, Max_Depth = None)
+                                temp_path, nodes_explored = A_Star_Search(grid.grid, grid.start, grid.end, Noise_Level=None, Max_Depth = None)
+
+                            end_time = time.perf_counter()
+                            search_time = end_time - start_time
                             if temp_path is not None and len(temp_path) >= 2:
                                 # Successful path found
                                 path = temp_path
@@ -290,7 +311,7 @@ while running:
                                 path_notification = "Path Found!"
                                 path_notification_colour = (0, 255, 0)  # Green
                                 path_notification_timer = 180
-                                Log_Path_Metrics(grid.grid, grid.start, grid.end, path, Agent_Type=selected_agent, Noise_Level=log_noise, Max_Depth=log_depth, Success=True)
+                                Log_Path_Metrics(grid.grid, grid.start, grid.end, path, Agent_Type=selected_agent, Noise_Level=log_noise, Max_Depth=log_depth, Success=True, Nodes_Explored=nodes_explored, Search_Time=search_time)
 
                             else:
                                 # Path not found
@@ -300,7 +321,7 @@ while running:
                                     path_notification = "No Path Found!"
                                 path_notification_colour = (255, 50, 50)
                                 path_notification_timer = 180
-                                Log_Path_Metrics(grid.grid, grid.start, grid.end, path, Agent_Type=selected_agent, Noise_Level=log_noise, Max_Depth=log_depth, Success=False)
+                                Log_Path_Metrics(grid.grid, grid.start, grid.end, path, Agent_Type=selected_agent, Noise_Level=log_noise, Max_Depth=log_depth, Success=False, Nodes_Explored=nodes_explored, Search_Time=search_time)
 
                     else:
                         path_notification = "Invalid Start/End!"
@@ -312,10 +333,43 @@ while running:
                         c = random.randint(0, Grid_Width - 1)
                         if (r, c) != grid.start and (r, c) != grid.end:
                             grid.grid[r][c] = 1
+
                     clear_path()
                     trail_tiles.clear()
                     animation_active = False
-                    path = A_Star_Search(grid.grid, grid.start, grid.end)
+                    nodes_explored = 0
+                    search_time = 0
+                    path = []
+
+                    if grid.start and grid.end:
+                        start_time = time.perf_counter()
+                        temp_path, nodes_explored = A_Star_Search(grid.grid, grid.start, grid.end)
+                        end_time = time.perf_counter()
+                        search_time = end_time - start_time
+
+                        if temp_path is not None and len(temp_path) >= 2:
+                            path = temp_path
+                            trail_tiles.clear()
+                            trail_tiles.append(path[0])
+                            current_step = 0
+                            agent_start = path[0]
+                            agent_end = path[1]
+                            interpolation_progress = 0.0
+                            animation_active = True
+
+                            path_notification = "New Path Found!"
+                            path_notification_colour = (0, 255, 0)
+                            path_notification_timer = 180
+                        else:
+                            path_notification = "No Path After Update"
+                            path_notification_colour = (255, 50, 50)
+                            path_notification_timer = 180
+                    else:
+                        path_notification = "Environment Updated!"
+                        path_notification_colour = (100, 200, 255)
+                        path_notification_timer = 180
+
+
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
@@ -332,6 +386,8 @@ while running:
                         interpolation_progress = 0.0
                         path_notification = None
                         path_notification_timer = 0
+                        nodes_explored = 0
+                        search_time = 0
                 elif event.button == 3:  # Right-click
                     mouse_right_held = True
                 pos = get_grid_position(pygame.mouse.get_pos())
@@ -341,6 +397,8 @@ while running:
                         clear_path()
                         trail_tiles.clear()
                         animation_active = False
+                        nodes_explored = 0
+                        search_time = 0
                         last_dragged_tile = pos
                     elif click_mode == 1:
                         if grid.grid[pos[0]][pos[1]] == 0 and pos != grid.end:
@@ -348,12 +406,16 @@ while running:
                             clear_path()
                             trail_tiles.clear()
                             animation_active = False
+                            nodes_explored = 0
+                            search_time = 0
                     elif click_mode == 2:
                         if grid.grid[pos[0]][pos[1]] == 0 and pos != grid.start:
                             grid.end = pos
                             clear_path()
                             trail_tiles.clear()
                             animation_active = False
+                            search_time = 0
+                            nodes_explored = 0
 
             elif event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1:
