@@ -44,7 +44,7 @@ def A_Star_Search(grid, start, end, Noise_Level=0, Max_Depth=None):
 
         explored_count += 1
         if Max_Depth is not None and explored_count > Max_Depth:
-            return None  # Simulates lookahead failure
+            return None, explored_count  # Simulates lookahead failure
 
         if current == end:
             # Reconstruct path
@@ -54,7 +54,7 @@ def A_Star_Search(grid, start, end, Noise_Level=0, Max_Depth=None):
                 current = came_from[current]
             path.append(start)
             path.reverse()
-            return path
+            return path, explored_count
 
         for neighbour in get_Neighbours(current, grid):
             tentative_g = g_score[current] + 1
@@ -64,4 +64,4 @@ def A_Star_Search(grid, start, end, Noise_Level=0, Max_Depth=None):
                 f_score[neighbour] = tentative_g + heuristics(neighbour, end, Noise_Level=Noise_Level)
                 heapq.heappush(open_set, (f_score[neighbour], neighbour))
 
-    return None
+    return None, explored_count
