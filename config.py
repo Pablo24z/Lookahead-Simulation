@@ -6,6 +6,7 @@ Grid_Width = 15
 Grid_Height = 15
 Screen_Width = 1000
 Screen_Height = 800
+Status_Bar_Height = 40
 
 # --- Colors ---
 White = (255, 255, 255)
@@ -32,8 +33,16 @@ FONT_REGULAR_24 = None
 # --- Setup function to initialize fonts AFTER pygame.init() ---
 def setup_fonts():
     global FONT_BOLD_50, FONT_BOLD_40, FONT_BOLD_28, FONT_REGULAR_26, FONT_REGULAR_24
-    FONT_BOLD_50 = pygame.font.Font(FONT_BOLD_PATH, 50)
-    FONT_BOLD_40 = pygame.font.Font(FONT_BOLD_PATH, 40)
-    FONT_BOLD_28 = pygame.font.Font(FONT_BOLD_PATH, 28)
-    FONT_REGULAR_26 = pygame.font.Font(FONT_REGULAR_PATH, 26)
-    FONT_REGULAR_24 = pygame.font.Font(FONT_REGULAR_PATH, 24)
+    try:
+        FONT_BOLD_50 = pygame.font.Font(FONT_BOLD_PATH, 50)
+        FONT_BOLD_40 = pygame.font.Font(FONT_BOLD_PATH, 40)
+        FONT_BOLD_28 = pygame.font.Font(FONT_BOLD_PATH, 28)
+        FONT_REGULAR_26 = pygame.font.Font(FONT_REGULAR_PATH, 26)
+        FONT_REGULAR_24 = pygame.font.Font(FONT_REGULAR_PATH, 24)
+    except Exception:
+        # Fallback to default system font if loading fails
+        FONT_BOLD_50 = pygame.font.SysFont(None, 50)
+        FONT_BOLD_40 = pygame.font.SysFont(None, 40)
+        FONT_BOLD_28 = pygame.font.SysFont(None, 28)
+        FONT_REGULAR_26 = pygame.font.SysFont(None, 26)
+        FONT_REGULAR_24 = pygame.font.SysFont(None, 24)
