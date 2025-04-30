@@ -4,6 +4,7 @@ import random
 import time
 import config
 from ui_screens import draw_start_menu, draw_instructions_screen
+from tilemap import load_tileset
 from gridworld import GridWorld
 from config import Tile_Size, Screen_Height, Screen_Width, Grid_Width, Grid_Height
 from lookahead import A_Star_Search
@@ -14,6 +15,19 @@ from metrics import Log_Path_Metrics
 pygame.init()
 config.setup_fonts()   # Important: Initialize fonts AFTER pygame.init()
 screen = pygame.display.set_mode((Screen_Width + 400, Screen_Height))
+tileset = load_tileset(config.TILESET_PATH, config.TILE_SIZE)
+coin_sprite_sheet = pygame.image.load("assets/images/icons/coin/coin_gold.png").convert_alpha()
+coin_frames = []
+frame_width = coin_sprite_sheet.get_width() // 8  # 8 frames horizontally
+frame_height = coin_sprite_sheet.get_height()
+
+for i in range(8):
+    frame_surface = coin_sprite_sheet.subsurface(pygame.Rect(i * frame_width, 0, frame_width, frame_height))
+    coin_frames.append(frame_surface)
+
+
+coin_anim_index = 0
+coin_anim_speed = 0.2  # tweak for faster/slower spin
 pygame.display.set_caption("Lookahead Strategy Simulation")
 clock = pygame.time.Clock()
 
@@ -66,25 +80,7 @@ def clear_path():
     else:
         path = []
 
-# --- Draw Functions ---
-def draw_grid():
-    for row in range(Grid_Height):
-        for col in range(Grid_Width):
-            rect = pygame.Rect(col * Tile_Size, row * Tile_Size, Tile_Size, Tile_Size)
-            tile_type = grid.grid[row][col]
 
-            # --- Base Tile Color ---
-            color = (40, 40, 40) if tile_type == 1 else (240, 240, 240)
-            pygame.draw.rect(screen, color, rect)
-            pygame.draw.rect(screen, (180, 180, 180), rect, 1)  # Light grid lines
-
-            # --- Special Start and End Points ---
-            if (row, col) == grid.start:
-                pygame.draw.circle(screen, (0, 200, 100), rect.center, Tile_Size // 3)
-                pygame.draw.rect(screen, (0, 255, 0), rect, 3)  # Green thick border
-            elif (row, col) == grid.end:
-                pygame.draw.rect(screen, (200, 50, 50), rect.inflate(-Tile_Size // 3, -Tile_Size // 3))
-                pygame.draw.rect(screen, (255, 0, 0), rect, 3)  # Red thick border
 
 
 def draw_trail():
@@ -238,7 +234,7 @@ while running:
 
     elif screen_mode == "simulation":
         screen.fill((30, 30, 30))
-        draw_grid()
+        grid.draw(screen, tileset, coin_frames, coin_anim_index)
         draw_trail()
         draw_agent()
         back_button_rect = draw_side_panel()
@@ -256,6 +252,9 @@ while running:
                     agent_end = path[current_step + 1]
                 else:
                     animation_active = False
+            coin_anim_index += coin_anim_speed
+            if coin_anim_index >= len(coin_frames):
+                coin_anim_index = 0
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
