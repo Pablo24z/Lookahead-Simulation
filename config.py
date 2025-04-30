@@ -8,10 +8,14 @@ Screen_Width = 1000
 Screen_Height = 800
 Status_Bar_Height = 40
 
+# Asset paths
+TILESET_PATH = "assets/images/tiles/forest/forest_tileset.png"
+TILE_SIZE = 16
 # --- Colors ---
 White = (255, 255, 255)
 Black = (0, 0, 0)
 Grey = (200, 200, 200)
+Light_Grey = (150, 150, 150)
 Green = (0, 255, 0)
 Red = (255, 0, 0)
 Blue = (50, 100, 255)
