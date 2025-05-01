@@ -27,7 +27,7 @@ for i in range(8):
 
 
 coin_anim_index = 0
-coin_anim_speed = 0.2  # tweak for faster/slower spin
+coin_anim_speed = 0.1  # tweak for faster/slower spin
 pygame.display.set_caption("Lookahead Strategy Simulation")
 clock = pygame.time.Clock()
 
@@ -233,6 +233,9 @@ while running:
         continue
 
     elif screen_mode == "simulation":
+        coin_anim_index += coin_anim_speed
+        if coin_anim_index >= len(coin_frames):
+            coin_anim_index = 0
         screen.fill((30, 30, 30))
         grid.draw(screen, tileset, coin_frames, coin_anim_index)
         draw_trail()
@@ -252,9 +255,6 @@ while running:
                     agent_end = path[current_step + 1]
                 else:
                     animation_active = False
-            coin_anim_index += coin_anim_speed
-            if coin_anim_index >= len(coin_frames):
-                coin_anim_index = 0
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

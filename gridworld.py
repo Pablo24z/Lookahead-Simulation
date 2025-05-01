@@ -41,17 +41,16 @@ class GridWorld:
                 if tile_type == 1:
                     screen.blit(tileset[149], (col * config.Tile_Size, row * config.Tile_Size))
                     
-                    if (row, col) == self.end:
-                        raw_coin = coin_frames[int(coin_anim_index)]
-                        
-                        # Scale to ~60–70% of tile size
-                        coin_size = int(config.Tile_Size * 0.6)
-                        scaled_coin = pygame.transform.scale(raw_coin, (coin_size, coin_size))
+                if (row, col) == self.end and coin_frames:
+                    index = int(coin_anim_index) % len(coin_frames)
+                    frame = coin_frames[index]
+                    scale = int(config.Tile_Size * 0.65)
+                    frame = pygame.transform.smoothscale(frame, (scale, scale))
+                    x = col * config.Tile_Size + (config.Tile_Size - scale) // 2
+                    y = row * config.Tile_Size + (config.Tile_Size - scale) // 2 + 2
+                    screen.blit(frame, (x, y))
 
-                        # Center the coin in the tile
-                        center_x = col * config.Tile_Size + (config.Tile_Size - coin_size) // 2
-                        center_y = row * config.Tile_Size + (config.Tile_Size - coin_size) // 2
-                        screen.blit(scaled_coin, (center_x, center_y))
+
 
 
 
@@ -66,8 +65,7 @@ class GridWorld:
                 # Start and End overlays
                 if (row, col) == self.start:
                     pygame.draw.rect(screen, (0, 255, 0), rect, 3)  # Green border
-                elif (row, col) == self.end:
-                    pygame.draw.rect(screen, (255, 0, 0), rect, 3)  # Red border
+                
 
     def Toggle_Wall(self, pos):
         row, col = pos
