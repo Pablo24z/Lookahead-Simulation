@@ -28,6 +28,39 @@ for i in range(8):
 
 coin_anim_index = 0
 coin_anim_speed = 0.1  # tweak for faster/slower spin
+
+# Player sprite loading
+player_sheet = pygame.image.load("assets/images/player/Unarmed_Walk_full.png").convert_alpha()
+
+sheet_width, sheet_height = player_sheet.get_size()
+frame_h = sheet_height // 16  # since you confirmed 16 rows
+frame_w = 16  # most likely still correct, unless the sheet width says otherwise
+
+print(f"Frame dimensions: {frame_w} x {frame_h}")
+
+direction_rows = {
+    "down": 2,
+    "left": 6,
+    "right": 10,
+    "up": 14
+}
+
+frames_per_dir = 4
+frame_w, frame_h = 16, 16
+player_frames = {key: [] for key in direction_rows}
+
+for direction, row in direction_rows.items():
+    for i in range(frames_per_dir):
+        rect = pygame.Rect(i * frame_w, row * frame_h, frame_w, frame_h)
+        frame = player_sheet.subsurface(rect)
+        player_frames[direction].append(frame)
+
+
+player_direction = "down"
+player_anim_index = 0
+player_anim_speed = 0.05
+player_anim_counter = 0.0
+
 pygame.display.set_caption("Lookahead Strategy Simulation")
 clock = pygame.time.Clock()
 
@@ -90,14 +123,45 @@ def draw_trail():
         pygame.draw.rect(screen, color, rect)
 
 def draw_agent():
+    global player_anim_index, player_anim_counter, player_direction
+
     if animation_active and agent_start and agent_end:
         sr, sc = agent_start
         er, ec = agent_end
         row = sr + (er - sr) * interpolation_progress
         col = sc + (ec - sc) * interpolation_progress
         center_x = int(col * Tile_Size + Tile_Size // 2)
-        center_y = int(row * Tile_Size + Tile_Size // 2)
-        pygame.draw.circle(screen, (0, 255, 255), (center_x, center_y), Tile_Size // 4)
+        center_y = int(row * Tile_Size + Tile_Size // 2) + 2
+
+        # --- FIXED DIRECTION LOGIC ---
+        dx, dy = er - sr, ec - sc
+        if abs(dx) > abs(dy):
+            player_direction = "down" if dx > 0 else "up"
+        else:
+            player_direction = "right" if dy > 0 else "left"
+
+
+        ## Animate
+        # --- Synchronize animation frame to tile progress ---
+        progress = interpolation_progress
+        frames = player_frames[player_direction]
+        frame_count = len(frames)
+
+        # Get frame based on interpolation progress
+        frame_index = int(progress * frame_count) % frame_count
+        frame = frames[frame_index]
+
+
+        # --- FIXED SCALE AND CENTERING ---
+        scale = int(Tile_Size * 0.8)  # slightly smaller than tile
+        frame = pygame.transform.smoothscale(frame, (scale, scale))
+
+        blit_x = int(center_x - scale // 2)
+        blit_y = int(center_y - scale // 2)  # slight vertical offset if needed
+        screen.blit(frame, (blit_x, blit_y))
+
+
+
 
 def draw_hover_highlight():
     mouse_pos = pygame.mouse.get_pos()
@@ -237,7 +301,7 @@ while running:
         if coin_anim_index >= len(coin_frames):
             coin_anim_index = 0
         screen.fill((30, 30, 30))
-        grid.draw(screen, tileset, coin_frames, coin_anim_index)
+        grid.draw(screen, tileset, coin_frames, coin_anim_index, player_frames, agent_start, player_direction, player_anim_index)
         draw_trail()
         draw_agent()
         back_button_rect = draw_side_panel()

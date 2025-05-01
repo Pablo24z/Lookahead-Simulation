@@ -9,7 +9,7 @@ class GridWorld:
         self.start = None
         self.end = None
 
-    def draw(self, screen, tileset, coin_frames, coin_anim_index):
+    def draw(self, screen, tileset, coin_frames, coin_anim_index, player_frames, player_pos, player_direction, player_anim_index):
         for row in range(self.height):
             for col in range(self.width):
                 tile_type = self.grid[row][col]
@@ -40,7 +40,8 @@ class GridWorld:
                 # If wall, draw bush on top of the correct tile
                 if tile_type == 1:
                     screen.blit(tileset[149], (col * config.Tile_Size, row * config.Tile_Size))
-                    
+
+                # Draw coin at end position
                 if (row, col) == self.end and coin_frames:
                     index = int(coin_anim_index) % len(coin_frames)
                     frame = coin_frames[index]
@@ -50,21 +51,14 @@ class GridWorld:
                     y = row * config.Tile_Size + (config.Tile_Size - scale) // 2 + 2
                     screen.blit(frame, (x, y))
 
-
-
-
-
-
-
                 # Grid line overlay
                 rect = pygame.Rect(col * config.Tile_Size, row * config.Tile_Size, config.Tile_Size, config.Tile_Size)
                 pygame.draw.rect(screen, config.Light_Grey, rect, 1)
 
-
-
                 # Start and End overlays
                 if (row, col) == self.start:
                     pygame.draw.rect(screen, (0, 255, 0), rect, 3)  # Green border
+
                 
 
     def Toggle_Wall(self, pos):
