@@ -1,0 +1,4 @@
+Timestamp,Start,End,Walls,Path Length,Agent Type,Noise Level,Max Depth,Success,Nodes Explored,Search Time (μs)
+2025-05-02 18:24:39,"(1, 6)","(12, 10)",69,-1,Depth,N/A,14,No,15,147
+2025-05-02 18:24:41,"(1, 6)","(10, 5)",69,-1,Depth,N/A,14,No,15,98
+2025-05-02 18:24:42,"(1, 6)","(7, 4)",69,9,Depth,N/A,14,Yes,14,87

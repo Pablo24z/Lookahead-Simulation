@@ -14,13 +14,20 @@ TILE_SIZE = 16
 
 # Trail
 trail_tileset_indices = {
-    "vertical": 128,      # down/up
-    "horizontal": 112,    # left/right
-    "down_right": 111,
-    "right_up": 145,
+    "vertical": 128,
+    "horizontal": 112,
+
+    "up_right": 111,
+    "right_up": 147,
+    "right_down": 113,
+    "down_right": 145,
+    "down_left": 147,
+    "left_down": 111,
+    "left_up": 145,
     "up_left": 113,
-    "left_down": 147
 }
+
+
 
 
 # --- Colors ---

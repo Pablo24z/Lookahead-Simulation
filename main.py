@@ -36,7 +36,7 @@ sheet_width, sheet_height = player_sheet.get_size()
 frame_h = sheet_height // 16  # since you confirmed 16 rows
 frame_w = 16  # most likely still correct, unless the sheet width says otherwise
 
-print(f"Frame dimensions: {frame_w} x {frame_h}")
+#print(f"Frame dimensions: {frame_w} x {frame_h}")
 
 direction_rows = {
     "down": 0,
@@ -122,53 +122,73 @@ def clear_path():
         path = []
 
 
-def get_direction(from_tile, to_tile):
-    fr, fc = from_tile
-    tr, tc = to_tile
-    if fr == tr:
-        return "right" if tc > fc else "left"
-    elif fc == tc:
-        return "down" if tr > fr else "up"
-    return None
-
 
 def draw_trail():
-    for i in range(1, len(trail_tiles) - 1):  # skip first and last
+    if len(trail_tiles) < 2:
+        return
+
+    def get_direction(from_tile, to_tile):
+        fr, fc = from_tile
+        tr, tc = to_tile
+        if fr == tr:
+            return "right" if tc > fc else "left"
+        elif fc == tc:
+            return "down" if tr > fr else "up"
+        return None
+    
+    corner_lookup = {
+    ("up", "right"): "up_right",
+    ("right", "up"): "right_up",
+    ("right", "down"): "right_down",
+    ("down", "right"): "down_right",
+    ("down", "left"): "down_left",
+    ("left", "down"): "left_down",
+    ("left", "up"): "left_up",
+    ("up", "left"): "up_left",
+    }
+
+
+
+    seen = set()  # Avoid redrawing the same tile
+
+    for i in range(1, len(trail_tiles) - 1):
         before = trail_tiles[i - 1]
         current = trail_tiles[i]
         after = trail_tiles[i + 1]
+
+        if current in seen:
+            continue
+        seen.add(current)
 
         dir_before = get_direction(before, current)
         dir_after = get_direction(current, after)
 
         if dir_before != dir_after:
-            # Turn/corner tile
-            corner_key = f"{dir_before}_{dir_after}"
-            tile_index = config.trail_tileset_indices.get(corner_key) or config.trail_tileset_indices.get(f"{dir_after}_{dir_before}", config.trail_tileset_indices["horizontal"])
+            key = corner_lookup.get((dir_before, dir_after))
+            tile_index = config.trail_tileset_indices.get(key, config.trail_tileset_indices["horizontal"])
         else:
-            # Straight tile
-            if dir_before in ("up", "down"):
-                tile_index = config.trail_tileset_indices["vertical"]
-            else:
-                tile_index = config.trail_tileset_indices["horizontal"]
+            tile_index = config.trail_tileset_indices["vertical" if dir_before in ("up", "down") else "horizontal"]
 
-        tile = tileset[tile_index]
+
+
+
         r, c = current
-        screen.blit(tile, (c * Tile_Size, r * Tile_Size))
+        screen.blit(tileset[tile_index], (c * Tile_Size, r * Tile_Size))
 
-    # Optional: draw first and last trail tiles as straight
-    if len(trail_tiles) > 1:
-        first = trail_tiles[0]
-        second = trail_tiles[1]
-        last = trail_tiles[-1]
-        dir_first = get_direction(first, second)
-        dir_last = get_direction(trail_tiles[-2], last)
+    # Draw only one correct tile for start
+    start = trail_tiles[0]
+    next_tile = trail_tiles[1]
+    dir_start = get_direction(start, next_tile)
+    tile_index = config.trail_tileset_indices["vertical" if dir_start in ("up", "down") else "horizontal"]
+    screen.blit(tileset[tile_index], (start[1] * Tile_Size, start[0] * Tile_Size))
 
-        tile_index_first = config.trail_tileset_indices["vertical" if dir_first in ("up", "down") else "horizontal"]
-        tile_index_last = config.trail_tileset_indices["vertical" if dir_last in ("up", "down") else "horizontal"]
+    # Same for end
+    end = trail_tiles[-1]
+    prev_tile = trail_tiles[-2]
+    dir_end = get_direction(prev_tile, end)
+    tile_index = config.trail_tileset_indices["vertical" if dir_end in ("up", "down") else "horizontal"]
+    screen.blit(tileset[tile_index], (end[1] * Tile_Size, end[0] * Tile_Size))
 
-        screen.blit(tileset[tile_index_first], (first[1] * Tile_Size, first[0] * Tile_Size))
-        screen.blit(tileset[tile_index_last], (last[1] * Tile_Size, last[0] * Tile_Size))
 
 
 
@@ -176,6 +196,7 @@ def draw_agent():
     global player_anim_index, player_anim_counter, player_direction
 
     if animation_active and agent_start and agent_end:
+        # Regular walking logic
         sr, sc = agent_start
         er, ec = agent_end
         row = sr + (er - sr) * interpolation_progress
@@ -183,32 +204,53 @@ def draw_agent():
         center_x = int(col * Tile_Size + Tile_Size // 2)
         center_y = int(row * Tile_Size + Tile_Size // 2) + 2
 
-        # --- FIXED DIRECTION LOGIC ---
         dx, dy = er - sr, ec - sc
         if abs(dx) > abs(dy):
             player_direction = "down" if dx > 0 else "up"
         else:
             player_direction = "right" if dy > 0 else "left"
 
-
-        ## Animate
-        # --- Synchronize animation frame to tile progress ---
-        progress = interpolation_progress
         frames = player_frames[player_direction]
-        frame_count = len(frames)
-
-        # Get frame based on interpolation progress
-        frame_index = int(progress * frame_count) % frame_count
+        frame_index = int(interpolation_progress * len(frames)) % len(frames)
         frame = frames[frame_index]
 
+    elif grid.start and not animation_active:
+        # Static player at start or end (idle)
+        if hasattr(grid, "trail_tiles") and grid.trail_tiles and grid.trail_tiles[-1] == grid.end:
+            # Player at end
+            row, col = grid.end
+            if len(grid.trail_tiles) >= 2:
+                prev = grid.trail_tiles[-2]
+                dx = row - prev[0]
+                dy = col - prev[1]
+                facing = "down" if dx > 0 else "up" if dx < 0 else "right" if dy > 0 else "left"
+            else:
+                facing = "down"
+        else:
+            # Player at start
+            row, col = grid.start
+            if grid.end:
+                dx = grid.end[0] - row
+                dy = grid.end[1] - col
+                facing = "down" if abs(dx) > abs(dy) and dx > 0 else \
+                         "up" if abs(dx) > abs(dy) else \
+                         "right" if dy > 0 else "left"
+            else:
+                facing = "down"
 
-        # --- FIXED SCALE AND CENTERING ---
-        scale = int(Tile_Size * 0.8)  # slightly smaller than tile
-        frame = pygame.transform.smoothscale(frame, (scale, scale))
+        frame = player_frames[facing][0]
+        center_x = col * Tile_Size + Tile_Size // 2
+        center_y = row * Tile_Size + Tile_Size // 2
 
-        blit_x = int(center_x - scale // 2)
-        blit_y = int(center_y - scale // 2)  # slight vertical offset if needed
-        screen.blit(frame, (blit_x, blit_y))
+    else:
+        return  # no player to draw
+
+    scale = int(Tile_Size * 0.8)
+    frame = pygame.transform.smoothscale(frame, (scale, scale))
+    blit_x = int(center_x - scale // 2)
+    blit_y = int(center_y - scale // 2)
+    screen.blit(frame, (blit_x, blit_y))
+
 
 
 
@@ -377,7 +419,7 @@ while running:
             coin_anim_index = 0
         screen.fill((30, 30, 30))
         grid.trail_tiles = trail_tiles
-        grid.draw(screen, tileset, coin_frames, coin_anim_index, player_frames, agent_start, player_direction, player_anim_index, animation_active)
+        grid.draw(screen, tileset, coin_frames, coin_anim_index, animation_active)
         draw_trail()
         draw_agent()
         back_button_rect = draw_side_panel()
@@ -585,7 +627,7 @@ while running:
                 last_dragged_tile = pos
 
 
-
+    #print("FPS:", clock.get_fps())
     clock.tick(120)
 
 pygame.quit()
