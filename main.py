@@ -30,7 +30,7 @@ coin_anim_index = 0
 coin_anim_speed = 0.1  # tweak for faster/slower spin
 
 # Player sprite loading
-player_sheet = pygame.image.load("assets/images/player/Unarmed_Walk_full.png").convert_alpha()
+player_sheet = pygame.image.load("assets/images/player/player_model.png").convert_alpha()
 
 sheet_width, sheet_height = player_sheet.get_size()
 frame_h = sheet_height // 16  # since you confirmed 16 rows
@@ -39,14 +39,16 @@ frame_w = 16  # most likely still correct, unless the sheet width says otherwise
 print(f"Frame dimensions: {frame_w} x {frame_h}")
 
 direction_rows = {
-    "down": 2,
-    "left": 6,
-    "right": 10,
-    "up": 14
+    "down": 0,
+    "left": 3,
+    "right": 2,
+    "up": 1
 }
 
-frames_per_dir = 4
-frame_w, frame_h = 16, 16
+sheet_width, sheet_height = player_sheet.get_size()
+frame_w, frame_h = 16, 16  # Verified size
+frames_per_dir = 4         # 4 frames per direction (columns)
+
 player_frames = {key: [] for key in direction_rows}
 
 for direction, row in direction_rows.items():
@@ -54,6 +56,12 @@ for direction, row in direction_rows.items():
         rect = pygame.Rect(i * frame_w, row * frame_h, frame_w, frame_h)
         frame = player_sheet.subsurface(rect)
         player_frames[direction].append(frame)
+
+if rect.right <= sheet_width and rect.bottom <= sheet_height:
+    frame = player_sheet.subsurface(rect)
+    player_frames[direction].append(frame)
+else:
+    print(f"Skipping out-of-bounds frame at row {row}, column {i}")
 
 
 player_direction = "down"
@@ -169,15 +177,40 @@ def draw_hover_highlight():
     if pos:
         row, col = pos
         if 0 <= row < Grid_Height and 0 <= col < Grid_Width:
-            hover_rect = pygame.Rect(col * Tile_Size, row * Tile_Size, Tile_Size, Tile_Size)
-            s = pygame.Surface((Tile_Size, Tile_Size), pygame.SRCALPHA)
+            x = col * Tile_Size
+            y = row * Tile_Size
+
             if click_mode == 0:
-                s.fill((255, 255, 0, 60))  # Wall mode
-            elif click_mode == 1:
-                s.fill((0, 255, 0, 60))    # Start point
-            elif click_mode == 2:
-                s.fill((255, 0, 0, 60))    # End point
-            screen.blit(s, hover_rect.topleft)
+                bush = tileset[149].copy()
+                scale = int(Tile_Size * 0.85)
+                bush = pygame.transform.smoothscale(bush, (scale, scale))
+                x = col * Tile_Size + (Tile_Size - scale) // 2
+                y = row * Tile_Size + (Tile_Size - scale) // 2
+                bush.set_alpha(160)
+                screen.blit(bush, (x, y))
+
+
+            elif click_mode == 1 and grid.start != (row, col):  # avoid overlap with real player
+                player_img = player_frames["down"][0].copy()  # downward facing
+                scale = int(Tile_Size * 0.8)
+                player_img = pygame.transform.smoothscale(player_img, (scale, scale))
+                player_img.set_alpha(150)
+
+                x = col * Tile_Size + (Tile_Size - scale) // 2
+                y = row * Tile_Size + (Tile_Size - scale) // 2
+                screen.blit(player_img, (x, y))
+
+
+            elif click_mode == 2 and coin_frames:
+                # Animated opaque coin
+                frame = coin_frames[int(coin_anim_index) % len(coin_frames)].copy()
+                scale = int(Tile_Size * 0.82)
+                frame = pygame.transform.smoothscale(frame, (scale, scale))
+                frame.set_alpha(160)
+                cx = x + (Tile_Size - scale) // 2
+                cy = y + (Tile_Size - scale) // 2
+                screen.blit(frame, (cx, cy))
+
 
 def draw_side_panel():
     panel_rect = pygame.Rect(Screen_Width, 0, 400, Screen_Height)

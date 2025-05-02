@@ -39,13 +39,19 @@ class GridWorld:
 
                 # If wall, draw bush on top of the correct tile
                 if tile_type == 1:
-                    screen.blit(tileset[149], (col * config.Tile_Size, row * config.Tile_Size))
+                    bush = tileset[149]
+                    scale = int(config.Tile_Size * 0.85)
+                    bush = pygame.transform.smoothscale(bush, (scale, scale))
+                    x = col * config.Tile_Size + (config.Tile_Size - scale) // 2
+                    y = row * config.Tile_Size + (config.Tile_Size - scale) // 2
+                    screen.blit(bush, (x, y))
+
 
                 # Draw coin at end position
                 if (row, col) == self.end and coin_frames:
                     index = int(coin_anim_index) % len(coin_frames)
                     frame = coin_frames[index]
-                    scale = int(config.Tile_Size * 0.65)
+                    scale = int(config.Tile_Size * 0.82)
                     frame = pygame.transform.smoothscale(frame, (scale, scale))
                     x = col * config.Tile_Size + (config.Tile_Size - scale) // 2
                     y = row * config.Tile_Size + (config.Tile_Size - scale) // 2 + 2
@@ -56,8 +62,31 @@ class GridWorld:
                 pygame.draw.rect(screen, config.Light_Grey, rect, 1)
 
                 # Start and End overlays
-                if (row, col) == self.start:
-                    pygame.draw.rect(screen, (0, 255, 0), rect, 3)  # Green border
+                # Determine direction based on start and end positions
+                if self.start:
+                    player_row, player_col = self.start
+
+                    if self.end:
+                        end_row, end_col = self.end
+                        dx = end_row - player_row
+                        dy = end_col - player_col
+
+                        if abs(dx) > abs(dy):
+                            facing = "down" if dx > 0 else "up"
+                        else:
+                            facing = "right" if dy > 0 else "left"
+                    else:
+                        facing = "down"  # default if no end point
+
+                    if (row, col) == self.start:
+                        frame = player_frames[facing][0]  # idle frame
+                        scale = int(config.Tile_Size * 0.8)
+                        frame = pygame.transform.smoothscale(frame, (scale, scale))
+                        px = col * config.Tile_Size + (config.Tile_Size - scale) // 2
+                        py = row * config.Tile_Size + (config.Tile_Size - scale) // 2
+                        screen.blit(frame, (px, py))
+
+
 
                 
 
