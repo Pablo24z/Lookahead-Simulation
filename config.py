@@ -11,6 +11,18 @@ Status_Bar_Height = 40
 # Asset paths
 TILESET_PATH = "assets/images/tiles/forest/forest_tileset.png"
 TILE_SIZE = 16
+
+# Trail
+trail_tileset_indices = {
+    "vertical": 128,      # down/up
+    "horizontal": 112,    # left/right
+    "down_right": 111,
+    "right_up": 145,
+    "up_left": 113,
+    "left_down": 147
+}
+
+
 # --- Colors ---
 White = (255, 255, 255)
 Black = (0, 0, 0)

@@ -122,13 +122,55 @@ def clear_path():
         path = []
 
 
+def get_direction(from_tile, to_tile):
+    fr, fc = from_tile
+    tr, tc = to_tile
+    if fr == tr:
+        return "right" if tc > fc else "left"
+    elif fc == tc:
+        return "down" if tr > fr else "up"
+    return None
 
 
 def draw_trail():
-    for i, (row, col) in enumerate(trail_tiles):
-        rect = pygame.Rect(col * Tile_Size, row * Tile_Size, Tile_Size, Tile_Size)
-        color = (50, 150, 255 - min(i * 8, 200))
-        pygame.draw.rect(screen, color, rect)
+    for i in range(1, len(trail_tiles) - 1):  # skip first and last
+        before = trail_tiles[i - 1]
+        current = trail_tiles[i]
+        after = trail_tiles[i + 1]
+
+        dir_before = get_direction(before, current)
+        dir_after = get_direction(current, after)
+
+        if dir_before != dir_after:
+            # Turn/corner tile
+            corner_key = f"{dir_before}_{dir_after}"
+            tile_index = config.trail_tileset_indices.get(corner_key) or config.trail_tileset_indices.get(f"{dir_after}_{dir_before}", config.trail_tileset_indices["horizontal"])
+        else:
+            # Straight tile
+            if dir_before in ("up", "down"):
+                tile_index = config.trail_tileset_indices["vertical"]
+            else:
+                tile_index = config.trail_tileset_indices["horizontal"]
+
+        tile = tileset[tile_index]
+        r, c = current
+        screen.blit(tile, (c * Tile_Size, r * Tile_Size))
+
+    # Optional: draw first and last trail tiles as straight
+    if len(trail_tiles) > 1:
+        first = trail_tiles[0]
+        second = trail_tiles[1]
+        last = trail_tiles[-1]
+        dir_first = get_direction(first, second)
+        dir_last = get_direction(trail_tiles[-2], last)
+
+        tile_index_first = config.trail_tileset_indices["vertical" if dir_first in ("up", "down") else "horizontal"]
+        tile_index_last = config.trail_tileset_indices["vertical" if dir_last in ("up", "down") else "horizontal"]
+
+        screen.blit(tileset[tile_index_first], (first[1] * Tile_Size, first[0] * Tile_Size))
+        screen.blit(tileset[tile_index_last], (last[1] * Tile_Size, last[0] * Tile_Size))
+
+
 
 def draw_agent():
     global player_anim_index, player_anim_counter, player_direction
@@ -334,7 +376,8 @@ while running:
         if coin_anim_index >= len(coin_frames):
             coin_anim_index = 0
         screen.fill((30, 30, 30))
-        grid.draw(screen, tileset, coin_frames, coin_anim_index, player_frames, agent_start, player_direction, player_anim_index)
+        grid.trail_tiles = trail_tiles
+        grid.draw(screen, tileset, coin_frames, coin_anim_index, player_frames, agent_start, player_direction, player_anim_index, animation_active)
         draw_trail()
         draw_agent()
         back_button_rect = draw_side_panel()
@@ -345,13 +388,18 @@ while running:
             interpolation_progress += interpolation_speed
             if interpolation_progress >= 1.0:
                 interpolation_progress = 0.0
-                trail_tiles.append(agent_end)
+
+                # Prevent repeated trail tiles
+                if not trail_tiles or trail_tiles[-1] != agent_end:
+                    trail_tiles.append(agent_end)
+
                 current_step += 1
                 if current_step < len(path) - 1:
                     agent_start = path[current_step]
                     agent_end = path[current_step + 1]
                 else:
                     animation_active = False
+
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
