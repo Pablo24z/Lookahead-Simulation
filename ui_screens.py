@@ -125,6 +125,7 @@ def draw_instructions_screen(screen, agent_key, depth_value, noise_value):
     button_defs = [
         ("Place Walls Randomly", "random", 360),
         ("Place Walls Manually", "manual", 420),
+        ("Use Benchmark Map", "benchmark", 480),
         ("Main Menu", "menu", 20)
     ]
 
@@ -146,5 +147,6 @@ def draw_instructions_screen(screen, agent_key, depth_value, noise_value):
             btn_rect.y + btn_rect.height // 2 - text.get_height() // 2
         ))
         button_rects.append((btn_rect, action))
+
 
     return button_rects

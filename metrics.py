@@ -31,7 +31,12 @@ def Log_Path_Metrics(grid, start, end, path, Agent_Type="Unknown", Noise_Level=N
                     f"{modified_time.strftime('%Y-%m-%d_%H-%M-%S')}_{Agent_Type.lower()}_metrics.csv"
                 )
                 shutil.move(filename, archived_name)
+                # After archiving, don't log to the moved file
+                cleared_files.discard(filename)
+
+        # Now mark this day's file as cleared
         cleared_files.add(filename)
+
 
     # --- Data preparation ---
     walls = sum(row.count(1) for row in grid)
