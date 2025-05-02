@@ -3,6 +3,7 @@ import sys
 import random
 import time
 import config
+from utils.map_utils import load_map, save_current_grid_to_map
 from ui_screens import draw_start_menu, draw_instructions_screen
 from tilemap import load_tileset
 from gridworld import GridWorld
@@ -75,7 +76,7 @@ clock = pygame.time.Clock()
 # --- Global States ---
 screen_mode = "menu"
 selected_agent = None
-depth_value = 5
+depth_value = 15
 noise_value = 5
 nodes_explored = 0
 search_time = 0
@@ -134,60 +135,48 @@ def draw_trail():
             return "right" if tc > fc else "left"
         elif fc == tc:
             return "down" if tr > fr else "up"
-        return None
-    
-    corner_lookup = {
-    ("up", "right"): "up_right",
-    ("right", "up"): "right_up",
-    ("right", "down"): "right_down",
-    ("down", "right"): "down_right",
-    ("down", "left"): "down_left",
-    ("left", "down"): "left_down",
-    ("left", "up"): "left_up",
-    ("up", "left"): "up_left",
-    }
+        return None  # Shouldn't happen for valid paths
 
-
-
-    seen = set()  # Avoid redrawing the same tile
-
-    for i in range(1, len(trail_tiles) - 1):
+    for i in range(1, len(trail_tiles) - 1):  # Skip first and last
         before = trail_tiles[i - 1]
         current = trail_tiles[i]
         after = trail_tiles[i + 1]
 
-        if current in seen:
-            continue
-        seen.add(current)
+        dir_from = get_direction(before, current)
+        dir_to = get_direction(current, after)
 
-        dir_before = get_direction(before, current)
-        dir_after = get_direction(current, after)
+        if dir_from and dir_to:
+            if dir_from == dir_to:
+                tile_key = "vertical" if dir_from in ("up", "down") else "horizontal"
+            else:
+                tile_key = f"{dir_from}_{dir_to}"
 
-        if dir_before != dir_after:
-            key = corner_lookup.get((dir_before, dir_after))
-            tile_index = config.trail_tileset_indices.get(key, config.trail_tileset_indices["horizontal"])
-        else:
-            tile_index = config.trail_tileset_indices["vertical" if dir_before in ("up", "down") else "horizontal"]
+            tile_index = config.trail_tileset_indices.get(tile_key)
+            if tile_index is not None:
+                tile = tileset[tile_index]
+                r, c = current
+                screen.blit(tile, (c * Tile_Size, r * Tile_Size))
 
-
-
-
-        r, c = current
-        screen.blit(tileset[tile_index], (c * Tile_Size, r * Tile_Size))
-
-    # Draw only one correct tile for start
+    # Draw the first tile based on its direction
     start = trail_tiles[0]
     next_tile = trail_tiles[1]
     dir_start = get_direction(start, next_tile)
-    tile_index = config.trail_tileset_indices["vertical" if dir_start in ("up", "down") else "horizontal"]
-    screen.blit(tileset[tile_index], (start[1] * Tile_Size, start[0] * Tile_Size))
+    if dir_start:
+        key = "vertical" if dir_start in ("up", "down") else "horizontal"
+        tile_index = config.trail_tileset_indices.get(key)
+        if tile_index:
+            screen.blit(tileset[tile_index], (start[1] * Tile_Size, start[0] * Tile_Size))
 
-    # Same for end
+    # Draw the last tile based on its incoming direction
     end = trail_tiles[-1]
     prev_tile = trail_tiles[-2]
     dir_end = get_direction(prev_tile, end)
-    tile_index = config.trail_tileset_indices["vertical" if dir_end in ("up", "down") else "horizontal"]
-    screen.blit(tileset[tile_index], (end[1] * Tile_Size, end[0] * Tile_Size))
+    if dir_end:
+        key = "vertical" if dir_end in ("up", "down") else "horizontal"
+        tile_index = config.trail_tileset_indices.get(key)
+        if tile_index:
+            screen.blit(tileset[tile_index], (end[1] * Tile_Size, end[0] * Tile_Size))
+
 
 
 
@@ -391,9 +380,9 @@ while running:
                 for rect, action in button_rects:
                     if rect.collidepoint(mouse_pos):
                         if action == "increase_depth":
-                            depth_value = min(depth_value + 1, 20) # Max depth is 20
+                            depth_value = min(depth_value + 1, 35) # Max depth is 35
                         elif action == "decrease_depth":
-                            depth_value = max(depth_value - 1, 1) # Minimum depth is 1
+                            depth_value = max(depth_value - 1, 5) # Minimum depth is 5
                         elif action == "increase_noise":
                             noise_value = min(noise_value + 1, 10) # Max Noise Level is 10
                         elif action == "decrease_noise":
@@ -407,6 +396,13 @@ while running:
                             screen_mode = "simulation"
                         elif action == "manual":
                             grid = GridWorld(Grid_Width, Grid_Height)
+                            screen_mode = "simulation"
+                        elif action == "benchmark":
+                            grid = GridWorld(Grid_Width, Grid_Height)
+                            loaded_grid, loaded_start, loaded_end = load_map("data/maps/map_easy.json")
+                            grid.grid = loaded_grid
+                            grid.start = loaded_start
+                            grid.end = loaded_end
                             screen_mode = "simulation"
                         elif action == "menu":
                             selected_agent = None
@@ -519,6 +515,9 @@ while running:
                         c = random.randint(0, Grid_Width - 1)
                         if (r, c) != grid.start and (r, c) != grid.end:
                             grid.grid[r][c] = 1
+                elif event.key == pygame.K_s and pygame.key.get_mods() & pygame.KMOD_CTRL:
+                    from utils.map_utils import save_current_grid_to_map
+                    save_current_grid_to_map(grid.grid, "data/maps/map_easy.json", grid.start, grid.end)
 
                     clear_path()
                     trail_tiles.clear()

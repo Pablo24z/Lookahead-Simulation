@@ -1,5 +1,3 @@
-# utils/map_utils.py
-
 import json
 import os
 
