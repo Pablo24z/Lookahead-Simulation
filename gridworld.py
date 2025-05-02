@@ -159,7 +159,8 @@ class GridWorld:
                             else:
                                 tile_index = stepping_stone_tiles.get((dir_from, dir_to))
                             
-                            if tile_index is not None and not (not animation_active and self.end == curr):
+                            if tile_index is not None and (curr != self.end or animation_active):
+
                                 stone = tileset[tile_index]
                                 screen.blit(stone, (curr[1] * config.Tile_Size, curr[0] * config.Tile_Size))
 

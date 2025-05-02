@@ -86,3 +86,4 @@ Timestamp,Start,End,Walls,Path Length,Agent Type,Noise Level,Max Depth,Success,N
 2025-05-02 05:37:31,"(1, 11)","(9, 0)",69,20,Dynamic,N/A,N/A,Yes,40,235
 2025-05-02 05:45:20,"(0, 8)","(13, 1)",74,23,Dynamic,N/A,N/A,Yes,83,556
 2025-05-02 05:45:39,"(0, 8)","(9, 13)",74,21,Dynamic,N/A,N/A,Yes,59,276
+2025-05-02 05:53:08,"(1, 10)","(13, 11)",73,14,Dynamic,N/A,N/A,Yes,23,164
