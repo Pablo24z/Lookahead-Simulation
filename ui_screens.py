@@ -55,8 +55,8 @@ def draw_instructions_screen(screen, agent_key, depth_value, noise_value):
         "dynamic": "Dynamic Environment Agent"
     }
     agent_controls = {
-        "depth": ["Press SPACE to switch modes (Wall, Start, End)", "Press ENTER to run the algorithm"],
-        "noise": ["Press SPACE to switch modes", "Press ENTER to run with noisy heuristic (Noise Level = 5)"],
+        "depth": ["Press SPACE to switch modes (Wall, Start, End)", "Press ENTER to run the algorithm (Default Depth Limit = 15)"],
+        "noise": ["Press SPACE to switch modes", "Press ENTER to run with noisy heuristic (Default Noise Level = 5)"],
         "dynamic": ["Press SPACE to switch modes", "Press ENTER to run", "Press D to trigger a dynamic world change"]
     }
 
@@ -125,7 +125,6 @@ def draw_instructions_screen(screen, agent_key, depth_value, noise_value):
     button_defs = [
         ("Place Walls Randomly", "random", 360),
         ("Place Walls Manually", "manual", 420),
-        ("Use Benchmark Map", "benchmark", 480),
         ("Main Menu", "menu", 20)
     ]
 
@@ -147,6 +146,29 @@ def draw_instructions_screen(screen, agent_key, depth_value, noise_value):
             btn_rect.y + btn_rect.height // 2 - text.get_height() // 2
         ))
         button_rects.append((btn_rect, action))
+
+    # --- Benchmark Map Buttons ---
+    benchmark_defs = [
+        ("Use Benchmark 1 (Easy)", "benchmark1", 480),
+        ("Use Benchmark 2 (Medium)", "benchmark2", 540),
+        ("Use Benchmark 3 (Hard)", "benchmark3", 600),
+    ]
+
+    for label, action, y in benchmark_defs:
+        btn_rect = pygame.Rect(config.Screen_Width // 2 - 200, y, 400, 45)
+        is_hovered = btn_rect.collidepoint(mouse_pos)
+        btn_color = config.Light_Orange if is_hovered else config.Orange
+
+        pygame.draw.rect(screen, btn_color, btn_rect)
+        pygame.draw.rect(screen, (255, 255, 255), btn_rect, 2)
+
+        text = config.FONT_REGULAR_26.render(label, True, (0, 0, 0) if is_hovered else (255, 255, 255))
+        screen.blit(text, (
+            btn_rect.x + btn_rect.width // 2 - text.get_width() // 2,
+            btn_rect.y + btn_rect.height // 2 - text.get_height() // 2
+        ))
+        button_rects.append((btn_rect, action))
+
 
 
     return button_rects

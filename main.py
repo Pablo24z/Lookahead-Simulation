@@ -3,7 +3,7 @@ import sys
 import random
 import time
 import config
-from utils.map_utils import load_map, save_current_grid_to_map
+from utils.map_utils import load_full_map
 from ui_screens import draw_start_menu, draw_instructions_screen
 from tilemap import load_tileset
 from gridworld import GridWorld
@@ -103,6 +103,10 @@ animation_active = False
 path_notification = None
 path_notification_timer = 0
 path_notification_colour = (255, 215, 0)
+
+# Benchmark Check
+is_benchmark_run = False
+benchmark_name = None
 
 # --- Helper Functions ---
 def get_grid_position(mouse_pos):
@@ -384,11 +388,13 @@ while running:
                         elif action == "decrease_depth":
                             depth_value = max(depth_value - 1, 5) # Minimum depth is 5
                         elif action == "increase_noise":
-                            noise_value = min(noise_value + 1, 10) # Max Noise Level is 10
+                            noise_value = min(noise_value + 1, 15) # Max Noise Level is 10
                         elif action == "decrease_noise":
                             noise_value = max(noise_value - 1, 0) # Minimum Noise Level is 0
                         elif action == "random":
                             grid = GridWorld(Grid_Width, Grid_Height)
+                            if config.Global_Seed is not None:
+                                random.seed(config.Global_Seed)
                             for _ in range(85):
                                 r = random.randint(0, Grid_Height - 1)
                                 c = random.randint(0, Grid_Width - 1)
@@ -397,12 +403,44 @@ while running:
                         elif action == "manual":
                             grid = GridWorld(Grid_Width, Grid_Height)
                             screen_mode = "simulation"
-                        elif action == "benchmark":
+                        elif action == "benchmark1":
                             grid = GridWorld(Grid_Width, Grid_Height)
-                            loaded_grid, loaded_start, loaded_end = load_map("data/maps/map_easy.json")
+                            grid_data = load_full_map("data/maps/map_easy.json")
+                            loaded_grid = grid_data["grid"]
+                            rows = len(loaded_grid)
+                            cols = len(loaded_grid[0]) if rows > 0 else 0
+                            grid = GridWorld(cols, rows)
                             grid.grid = loaded_grid
-                            grid.start = loaded_start
-                            grid.end = loaded_end
+                            grid.start = tuple(grid_data["start"]) if grid_data["start"] else None
+                            grid.end = tuple(grid_data["end"]) if grid_data["end"] else None
+                            is_benchmark_run = True
+                            benchmark_name = "easy"
+                            screen_mode = "simulation"
+                        elif action == "benchmark2":
+                            grid = GridWorld(Grid_Width, Grid_Height)
+                            grid_data = load_full_map("data/maps/map_medium.json")
+                            loaded_grid = grid_data["grid"]
+                            rows = len(loaded_grid)
+                            cols = len(loaded_grid[0]) if rows > 0 else 0
+                            grid = GridWorld(cols, rows)
+                            grid.grid = loaded_grid
+                            grid.start = tuple(grid_data["start"]) if grid_data["start"] else None
+                            grid.end = tuple(grid_data["end"]) if grid_data["end"] else None
+                            is_benchmark_run = True
+                            benchmark_name = "easy"
+                            screen_mode = "simulation"
+                        elif action == "benchmark3":
+                            grid = GridWorld(Grid_Width, Grid_Height)
+                            grid_data = load_full_map("data/maps/map_true_maze.json")
+                            loaded_grid = grid_data["grid"]
+                            rows = len(loaded_grid)
+                            cols = len(loaded_grid[0]) if rows > 0 else 0
+                            grid = GridWorld(cols, rows)
+                            grid.grid = loaded_grid
+                            grid.start = tuple(grid_data["start"]) if grid_data["start"] else None
+                            grid.end = tuple(grid_data["end"]) if grid_data["end"] else None
+                            is_benchmark_run = True
+                            benchmark_name = "easy"
                             screen_mode = "simulation"
                         elif action == "menu":
                             selected_agent = None
@@ -461,14 +499,17 @@ while running:
                                 grid.grid,
                                 grid.start,
                                 grid.end,
-                                None,  # No path possible
+                                path if Success else None,
                                 Agent_Type=selected_agent,
                                 Noise_Level=log_noise,
                                 Max_Depth=log_depth,
-                                Success=False,
+                                Success=Success,
                                 Nodes_Explored=nodes_explored,
-                                Search_Time=search_time
+                                Search_Time=search_time,
+                                is_benchmark=is_benchmark_run,
+                                benchmark_name=benchmark_name if is_benchmark_run else None
                             )
+
 
                         else:
                             if selected_agent == "depth":
@@ -480,6 +521,8 @@ while running:
 
                             end_time = time.perf_counter()
                             search_time = end_time - start_time
+
+                            Success = temp_path is not None and len(temp_path) >= 2
                             if temp_path is not None and len(temp_path) >= 2:
                                 # Successful path found
                                 path = temp_path
@@ -493,7 +536,21 @@ while running:
                                 path_notification = "Path Found!"
                                 path_notification_colour = (0, 255, 0)  # Green
                                 path_notification_timer = 180
-                                Log_Path_Metrics(grid.grid, grid.start, grid.end, path, Agent_Type=selected_agent, Noise_Level=log_noise, Max_Depth=log_depth, Success=True, Nodes_Explored=nodes_explored, Search_Time=search_time)
+                                Log_Path_Metrics(
+                                    grid.grid,
+                                    grid.start,
+                                    grid.end,
+                                    path if Success else None,
+                                    Agent_Type=selected_agent,
+                                    Noise_Level=log_noise,
+                                    Max_Depth=log_depth,
+                                    Success=Success,
+                                    Nodes_Explored=nodes_explored,
+                                    Search_Time=search_time,
+                                    is_benchmark=is_benchmark_run,
+                                    benchmark_name=benchmark_name if is_benchmark_run else None
+                                )
+
 
                             else:
                                 # Path not found
@@ -503,59 +560,32 @@ while running:
                                     path_notification = "No Path Found!"
                                 path_notification_colour = (255, 50, 50)
                                 path_notification_timer = 180
-                                Log_Path_Metrics(grid.grid, grid.start, grid.end, path, Agent_Type=selected_agent, Noise_Level=log_noise, Max_Depth=log_depth, Success=False, Nodes_Explored=nodes_explored, Search_Time=search_time)
-
+                                Log_Path_Metrics(
+                                    grid.grid,
+                                    grid.start,
+                                    grid.end,
+                                    path if Success else None,
+                                    Agent_Type=selected_agent,
+                                    Noise_Level=log_noise,
+                                    Max_Depth=log_depth,
+                                    Success=Success,
+                                    Nodes_Explored=nodes_explored,
+                                    Search_Time=search_time,
+                                    is_benchmark=is_benchmark_run,
+                                    benchmark_name=benchmark_name if is_benchmark_run else None
+                                )
                     else:
                         path_notification = "Invalid Start/End!"
                         path_notification_colour = (255, 50, 50)
                         path_notification_timer = 180
                 elif event.key == pygame.K_d and selected_agent == "dynamic":
+                    if config.Global_Seed is not None:
+                        random.seed(config.Global_Seed)
                     for _ in range(10):
                         r = random.randint(0, Grid_Height - 1)
                         c = random.randint(0, Grid_Width - 1)
                         if (r, c) != grid.start and (r, c) != grid.end:
                             grid.grid[r][c] = 1
-                elif event.key == pygame.K_s and pygame.key.get_mods() & pygame.KMOD_CTRL:
-                    from utils.map_utils import save_current_grid_to_map
-                    save_current_grid_to_map(grid.grid, "data/maps/map_easy.json", grid.start, grid.end)
-
-                    clear_path()
-                    trail_tiles.clear()
-                    animation_active = False
-                    nodes_explored = 0
-                    search_time = 0
-                    path = []
-
-                    if grid.start and grid.end:
-                        start_time = time.perf_counter()
-                        temp_path, nodes_explored = A_Star_Search(grid.grid, grid.start, grid.end)
-                        end_time = time.perf_counter()
-                        search_time = end_time - start_time
-
-                        if temp_path is not None and len(temp_path) >= 2:
-                            path = temp_path
-                            trail_tiles.clear()
-                            trail_tiles.append(path[0])
-                            current_step = 0
-                            agent_start = path[0]
-                            agent_end = path[1]
-                            interpolation_progress = 0.0
-                            animation_active = True
-
-                            path_notification = "New Path Found!"
-                            path_notification_colour = (0, 255, 0)
-                            path_notification_timer = 180
-                        else:
-                            path_notification = "No Path After Update"
-                            path_notification_colour = (255, 50, 50)
-                            path_notification_timer = 180
-                    else:
-                        path_notification = "Environment Updated!"
-                        path_notification_colour = (100, 200, 255)
-                        path_notification_timer = 180
-
-
-
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
                 if event.button == 1:  # Left-click

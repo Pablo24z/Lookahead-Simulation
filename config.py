@@ -8,6 +8,9 @@ Screen_Width = 1000
 Screen_Height = 800
 Status_Bar_Height = 40
 
+# Seed
+Global_Seed = None
+
 # Asset paths
 TILESET_PATH = "assets/images/tiles/forest/forest_tileset.png"
 TILE_SIZE = 16
