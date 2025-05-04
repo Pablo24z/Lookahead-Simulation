@@ -1,5 +1,6 @@
 import pygame
 import config
+from utils.game_state import get_grid_position
 
 
 def draw_hover_highlight(screen, tileset, coin_frames, player_frames, coin_anim_index, controller):
@@ -35,7 +36,8 @@ def draw_hover_highlight(screen, tileset, coin_frames, player_frames, coin_anim_
         scale = int(tile_size * 0.85)
         bush = pygame.transform.smoothscale(bush, (scale, scale))
         bush.set_alpha(160)
-        screen.blit(bush, (x + (tile_size - scale) // 2, y + (tile_size - scale) // 2))
+        screen.blit(bush, (x + (tile_size - scale) //
+                    2, y + (tile_size - scale) // 2))
 
     elif controller.click_mode == 1 and controller.grid.start != (row, col):
         # Preview for placing the player
@@ -43,7 +45,8 @@ def draw_hover_highlight(screen, tileset, coin_frames, player_frames, coin_anim_
         scale = int(tile_size * 0.8)
         player_img = pygame.transform.smoothscale(player_img, (scale, scale))
         player_img.set_alpha(150)
-        screen.blit(player_img, (x + (tile_size - scale) // 2, y + (tile_size - scale) // 2))
+        screen.blit(player_img, (x + (tile_size - scale) //
+                    2, y + (tile_size - scale) // 2))
 
     elif controller.click_mode == 2 and coin_frames:
         # Preview for placing the goal (coin)
@@ -51,21 +54,5 @@ def draw_hover_highlight(screen, tileset, coin_frames, player_frames, coin_anim_
         scale = int(tile_size * 0.65)
         frame = pygame.transform.smoothscale(frame, (scale, scale))
         frame.set_alpha(160)
-        screen.blit(frame, (x + (tile_size - scale) // 2, y + (tile_size - scale) // 2))
-
-
-def get_grid_position(mouse_pos, screen_width, tile_size, grid_width, grid_height):
-    """
-    Converts the mouse's screen coordinates to a tile position in the grid.
-    Returns None if outside the grid area.
-    """
-    x, y = mouse_pos
-    if x >= screen_width:
-        return None
-
-    row = y // tile_size
-    col = x // tile_size
-
-    if 0 <= row < grid_height and 0 <= col < grid_width:
-        return row, col
-    return None
+        screen.blit(frame, (x + (tile_size - scale) //
+                    2, y + (tile_size - scale) // 2))

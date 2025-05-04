@@ -12,9 +12,11 @@ def draw_start_menu(screen):
     button_font = config.FONT_REGULAR_26
 
     # Title
-    title_text = title_font.render("Lookahead Strategy Simulation", True, (255, 255, 255))
+    title_text = title_font.render(
+        "Lookahead Strategy Simulation", True, (255, 255, 255))
     title_y = 120
-    screen.blit(title_text, (config.Screen_Width // 2 - title_text.get_width() // 2, title_y))
+    screen.blit(title_text, (config.Screen_Width // 2 -
+                title_text.get_width() // 2, title_y))
 
     underline_y = title_y + title_text.get_height() + 5
     pygame.draw.line(
@@ -29,7 +31,8 @@ def draw_start_menu(screen):
     button_specs = [
         ("Depth-Limited Agent", "depth", button_y_start),
         ("Noisy Heuristic Agent", "noise", button_y_start + button_spacing * 2),
-        ("Dynamic Environment Agent", "dynamic", button_y_start + button_spacing * 4),
+        ("Dynamic Environment Agent", "dynamic",
+         button_y_start + button_spacing * 4),
     ]
 
     mouse_pos = pygame.mouse.get_pos()
@@ -43,7 +46,8 @@ def draw_start_menu(screen):
         pygame.draw.rect(screen, colour, button_rect)
         pygame.draw.rect(screen, (255, 255, 255), button_rect, 2)
 
-        text = button_font.render(label, True, (0, 0, 0) if is_hovered else (255, 255, 255))
+        text = button_font.render(
+            label, True, (0, 0, 0) if is_hovered else (255, 255, 255))
         screen.blit(text, (
             button_rect.centerx - text.get_width() // 2,
             button_rect.centery - text.get_height() // 2
@@ -84,9 +88,11 @@ def draw_instructions_screen(screen, agent_key, depth_value, noise_value):
     }
 
     # Agent title and underline
-    title_text = config.FONT_BOLD_40.render(agent_titles[agent_key], True, (255, 255, 255))
+    title_text = config.FONT_BOLD_40.render(
+        agent_titles[agent_key], True, (255, 255, 255))
     title_y = 100
-    screen.blit(title_text, (config.Screen_Width // 2 - title_text.get_width() // 2, title_y))
+    screen.blit(title_text, (config.Screen_Width // 2 -
+                title_text.get_width() // 2, title_y))
 
     underline_y = title_y + title_text.get_height() + 5
     pygame.draw.line(
@@ -104,14 +110,17 @@ def draw_instructions_screen(screen, agent_key, depth_value, noise_value):
 
     # Optional parameter sliders
     def draw_param_adjust(label, value, y_pos, key_prefix):
-        param_text = config.FONT_REGULAR_24.render(f"{label}: {value}", True, (255, 255, 255))
-        screen.blit(param_text, (config.Screen_Width // 2 - param_text.get_width() // 2, y_pos))
+        param_text = config.FONT_REGULAR_24.render(
+            f"{label}: {value}", True, (255, 255, 255))
+        screen.blit(param_text, (config.Screen_Width //
+                    2 - param_text.get_width() // 2, y_pos))
 
         plus_rect = pygame.Rect(config.Screen_Width // 2 + 80, y_pos, 30, 30)
         minus_rect = pygame.Rect(config.Screen_Width // 2 - 110, y_pos, 30, 30)
 
         for rect, symbol in [(plus_rect, "+"), (minus_rect, "-")]:
-            colour = config.Light_Orange if rect.collidepoint(mouse_pos) else config.Orange
+            colour = config.Light_Orange if rect.collidepoint(
+                mouse_pos) else config.Orange
             pygame.draw.rect(screen, colour, rect)
 
             sym_text = config.FONT_REGULAR_26.render(symbol, True, (0, 0, 0))
@@ -141,14 +150,16 @@ def draw_instructions_screen(screen, agent_key, depth_value, noise_value):
     for label, action, y in main_button_defs:
         width = 250 if action == "menu" else 400
         x_pos = 30 if action == "menu" else config.Screen_Width // 2 - 200
-        button_rect = pygame.Rect(x_pos, y, width, 45 if action != "menu" else 35)
+        button_rect = pygame.Rect(
+            x_pos, y, width, 45 if action != "menu" else 35)
         is_hovered = button_rect.collidepoint(mouse_pos)
         colour = config.Light_Orange if is_hovered else config.Orange
 
         pygame.draw.rect(screen, colour, button_rect)
         pygame.draw.rect(screen, (255, 255, 255), button_rect, 2)
 
-        text = config.FONT_REGULAR_26.render(label, True, (0, 0, 0) if is_hovered else (255, 255, 255))
+        text = config.FONT_REGULAR_26.render(
+            label, True, (0, 0, 0) if is_hovered else (255, 255, 255))
         screen.blit(text, (
             button_rect.centerx - text.get_width() // 2,
             button_rect.centery - text.get_height() // 2
@@ -171,7 +182,8 @@ def draw_instructions_screen(screen, agent_key, depth_value, noise_value):
         pygame.draw.rect(screen, colour, button_rect)
         pygame.draw.rect(screen, (255, 255, 255), button_rect, 2)
 
-        text = config.FONT_REGULAR_26.render(label, True, (0, 0, 0) if is_hovered else (255, 255, 255))
+        text = config.FONT_REGULAR_26.render(
+            label, True, (0, 0, 0) if is_hovered else (255, 255, 255))
         screen.blit(text, (
             button_rect.centerx - text.get_width() // 2,
             button_rect.centery - text.get_height() // 2

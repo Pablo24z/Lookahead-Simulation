@@ -1,3 +1,0 @@
-Timestamp,Start,End,Walls,Path Length,Agent Type,Noise Level,Max Depth,Success,Nodes Explored,Search Time (μs)
-2025-04-28 20:20:20,"(13, 13)","(7, 7)",74,13,Dynamic,N/A,N/A,Yes,17,114
-2025-04-28 20:20:22,"(13, 13)","(7, 7)",80,13,Dynamic,N/A,N/A,Yes,17,100

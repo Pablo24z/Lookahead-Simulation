@@ -1,8 +1,0 @@
-Timestamp,Start,End,Walls,Path Length,Agent Type,Noise Level,Max Depth,Success,Nodes Explored,Search Time (μs)
-2025-04-30 01:49:56,"(9, 10)","(6, 3)",78,-1,Dynamic,N/A,N/A,No,81,394
-2025-04-30 01:49:59,"(9, 10)","(3, 10)",78,11,Dynamic,N/A,N/A,Yes,15,283
-2025-04-30 04:57:16,"(14, 0)","(9, 11)",69,-1,Dynamic,N/A,N/A,No,16,274
-2025-04-30 04:57:19,"(14, 0)","(11, 4)",69,8,Dynamic,N/A,N/A,Yes,8,59
-2025-04-30 05:19:51,"(11, 2)","(8, 11)",70,13,Dynamic,N/A,N/A,Yes,16,200
-2025-04-30 05:31:11,"(14, 9)","(12, 8)",77,4,Dynamic,N/A,N/A,Yes,4,99
-2025-04-30 05:31:15,"(14, 9)","(10, 10)",77,6,Dynamic,N/A,N/A,Yes,6,47

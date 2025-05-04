@@ -1,6 +1,8 @@
 import pygame
 import time
 import random
+import os
+import config
 
 from gridworld import GridWorld
 from lookahead import A_Star_Search
@@ -234,7 +236,7 @@ class SimulationController:
         """
         Loads a saved grid configuration from a benchmark file.
         """
-        path = f"src/data/maps/map_{name}.json"
+        path = f"{config.DATA_DIR}/maps/map_{name}.json"
         data = load_full_map(path)
         loaded_grid = data["grid"]
         rows = len(loaded_grid)
@@ -269,11 +271,14 @@ class SimulationController:
 
         start_time = time.perf_counter()
         if self.selected_agent == "depth":
-            temp_path, explored = A_Star_Search(self.grid.grid, self.grid.start, self.grid.end, Max_Depth=self.depth_value)
+            temp_path, explored = A_Star_Search(
+                self.grid.grid, self.grid.start, self.grid.end, Max_Depth=self.depth_value)
         elif self.selected_agent == "noise":
-            temp_path, explored = A_Star_Search(self.grid.grid, self.grid.start, self.grid.end, Noise_Level=self.noise_value)
+            temp_path, explored = A_Star_Search(
+                self.grid.grid, self.grid.start, self.grid.end, Noise_Level=self.noise_value)
         elif self.selected_agent == "dynamic":
-            temp_path, explored = A_Star_Search(self.grid.grid, self.grid.start, self.grid.end)
+            temp_path, explored = A_Star_Search(
+                self.grid.grid, self.grid.start, self.grid.end)
         else:
             temp_path, explored = None, 0
         end_time = time.perf_counter()

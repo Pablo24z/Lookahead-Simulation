@@ -1,4 +1,23 @@
+import logging
 import pygame
+import os
+
+# Resolve the working directory so relative paths always work, even when called from outside the src folder
+SRC_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(SRC_DIR, "data")
+ASSETS_DIR = os.path.join(SRC_DIR, "assets")
+METRICS_DIR = os.path.join(DATA_DIR, "metrics")
+
+
+logger = logging.getLogger(__name__)
+
+logger.debug(
+    f"Config file loaded from {SRC_DIR}.\n"
+    f"Assets directory: {ASSETS_DIR}.\n"
+    f"Data directory: {DATA_DIR}.\n"
+    f"Metrics directory: {METRICS_DIR}.\n"
+    f"Current working directory: {os.getcwd()}.\n"
+)
 
 # Grid and display settings
 Tile_Size = 40             # In-game tile size (scaled from sprite)
@@ -12,10 +31,10 @@ Global_Seed = None         # Set this to fix randomness for repeatable results
 
 # File paths for assets
 TILESET_TILE_SIZE = 16     # Raw sprite size in tileset (usually 16x16)
-TILESET_PATH = "src/assets/images/tiles/forest/forest_tileset.png"
+TILESET_PATH = f"{ASSETS_DIR}/images/tiles/forest/forest_tileset.png"
 
-FONT_BOLD_PATH = "src/assets/fonts/RobotoMono-Bold.ttf"
-FONT_REGULAR_PATH = "src/assets/fonts/RobotoMono-Regular.ttf"
+FONT_BOLD_PATH = f"{ASSETS_DIR}/fonts/RobotoMono-Bold.ttf"
+FONT_REGULAR_PATH = f"{ASSETS_DIR}/fonts/RobotoMono-Regular.ttf"
 
 # Trail tile indices for path visuals
 trail_tileset_indices = {
@@ -50,6 +69,7 @@ FONT_BOLD_40 = None
 FONT_BOLD_28 = None
 FONT_REGULAR_26 = None
 FONT_REGULAR_24 = None
+
 
 def setup_fonts():
     """

@@ -1,6 +1,7 @@
 import json
 import os
 
+
 def load_full_map(filepath):
     """
     Loads a complete benchmark map from a JSON file.
@@ -30,6 +31,7 @@ def load_full_map(filepath):
 
     required_keys = ("grid", "start", "end")
     if not all(key in data for key in required_keys):
-        raise ValueError(f"Map file is missing required keys {required_keys}: {filepath}")
+        raise ValueError(
+            f"Map file is missing required keys {required_keys}: {filepath}")
 
     return data

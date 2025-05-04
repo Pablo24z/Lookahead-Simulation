@@ -1,0 +1,4 @@
+Timestamp,Start,End,Walls,Path Length,Agent Type,Noise Level,Max Depth,Success,Nodes Explored,Search Time (μs),Seed
+2025-05-04 14:49:13,"(0, 0)","(14, 14)",148,29,Depth,N/A,30,Yes,29,69,N/A
+2025-05-04 15:50:40,"(0, 0)","(14, 14)",148,-1,Depth,N/A,15,No,16,60,N/A
+2025-05-04 15:50:47,"(0, 0)","(14, 14)",148,29,Depth,N/A,30,Yes,29,68,N/A

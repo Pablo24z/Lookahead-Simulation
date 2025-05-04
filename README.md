@@ -12,7 +12,7 @@ It was built with a strong emphasis on reproducibility, clarity of logic, and hi
 
 - **Depth-Limited Agent**: Explores only up to a defined depth — useful for modelling cognitive limitations.
 - **Noisy Heuristic Agent**: Adds probabilistic variation to the heuristic, simulating uncertainty and imperfect perception.
-- **Dynamic Agent**: Designed to handle real-time changes in the environment, rerouting if the world is altered mid-search.
+- **Dynamic Agent**: Designed to handle real-time changes in the environment, re-routing if the world is altered mid-search.
 
 ### Interactive Grid Editor
 
@@ -59,9 +59,20 @@ Benchmark runs are also supported and stored separately for controlled testing.
 ## Running the Project
 
 1. **Install Requirements**  
-   You'll need Python 3.8 or higher and the following libraries:
+   You'll need Python 3.8 or higher and then install the required packages. You can do this using pip:
    ```bash
-   pip install pygame seaborn matplotlib pandas tqdm
+   pip install -r requirements.txt
+   ```
+
+   Recommended to use a virtual environment for package management.
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+   ```
+
+   Then install the requirements:
+   ```bash
+   pip install -r requirements.txt
    ```
 
 2. **Launch the Simulation**
@@ -72,7 +83,7 @@ Benchmark runs are also supported and stored separately for controlled testing.
 3. **Run Benchmarks**
    To automate a batch of simulation runs:
    ```bash
-   python run_benchmarks.py --agent depth --benchmark easy --runs 5
+   python run_benchmark.py --agent depth --benchmark easy --runs 5
    ```
 
 4. **Launch the Metrics Visualiser**
@@ -80,10 +91,10 @@ Benchmark runs are also supported and stored separately for controlled testing.
    python visualiser.py
    ```
 
-## Folder Structure (Updated)
+## Folder Structure
 
 ```
-src/
+./
 
   main.py                     # Main simulation entry point
   config.py                   # Constants for layout, colours, fonts

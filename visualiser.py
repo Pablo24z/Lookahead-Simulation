@@ -7,12 +7,13 @@ import platform
 from matplotlib.backends.backend_pdf import PdfPages
 import tkinter as tk
 from tkinter import ttk, messagebox
+import config
 
 # Enable interactive plotting
 plt.ion()
 
 AGENTS = ["depth", "noise", "dynamic"]
-METRICS_DIR = os.path.join("data", "metrics")
+
 
 class MetricsVisualizer:
     def __init__(self, root):
@@ -41,8 +42,10 @@ class MetricsVisualizer:
         frame = ttk.Frame(tab, padding=20)
         frame.pack(fill="x")
 
-        ttk.Label(frame, text="Select Agent:").grid(row=0, column=0, sticky="w")
-        agent_menu = ttk.OptionMenu(frame, self.selected_agent, AGENTS[0], *AGENTS)
+        ttk.Label(frame, text="Select Agent:").grid(
+            row=0, column=0, sticky="w")
+        agent_menu = ttk.OptionMenu(
+            frame, self.selected_agent, AGENTS[0], *AGENTS)
         agent_menu.grid(row=0, column=1, sticky="w")
 
         # Graphing options
@@ -55,7 +58,7 @@ class MetricsVisualizer:
         ttk.Button(frame, text="Export All Plots to PDF",
                    command=lambda: self.export_all_plots_pdf(is_benchmark)).grid(row=4, column=0, columnspan=2, pady=10, sticky="ew")
         ttk.Button(frame, text="Open PDF Report",
-           command=lambda: self.open_pdf_report(is_benchmark)).grid(row=5, column=0, columnspan=2, pady=10, sticky="ew")
+                   command=lambda: self.open_pdf_report(is_benchmark)).grid(row=5, column=0, columnspan=2, pady=10, sticky="ew")
 
     def setup_compare_tab(self, is_benchmark):
         """
@@ -79,14 +82,16 @@ class MetricsVisualizer:
         """
         Loads and merges all CSVs for a given agent, including from archives.
         """
-        folder = os.path.join(METRICS_DIR, agent, "benchmark_data" if is_benchmark else "")
+        folder = f"{config.METRICS_DIR}/{agent}/{'benchmark_data' if is_benchmark else ''}"
         archive_folder = os.path.join(folder, "archive")
 
         all_files = []
         if os.path.exists(folder):
-            all_files += [os.path.join(folder, f) for f in os.listdir(folder) if f.endswith(".csv")]
+            all_files += [os.path.join(folder, f)
+                          for f in os.listdir(folder) if f.endswith(".csv")]
         if os.path.exists(archive_folder):
-            all_files += [os.path.join(archive_folder, f) for f in os.listdir(archive_folder) if f.endswith(".csv")]
+            all_files += [os.path.join(archive_folder, f)
+                          for f in os.listdir(archive_folder) if f.endswith(".csv")]
 
         dfs = [pd.read_csv(f).assign(_source_file=f) for f in all_files]
         if not dfs:
@@ -107,7 +112,7 @@ class MetricsVisualizer:
         plt.tight_layout()
 
         subfolder = "benchmark_data/graphs" if is_benchmark else "graphs"
-        save_path = os.path.join(METRICS_DIR, agent, subfolder)
+        save_path = f"{config.METRICS_DIR}/{agent}/{subfolder}"
         os.makedirs(save_path, exist_ok=True)
         plt.savefig(os.path.join(save_path, filename))
         plt.show()
@@ -119,13 +124,17 @@ class MetricsVisualizer:
         agent = self.selected_agent.get()
         df = self.load_all_data(agent, is_benchmark)
         if df.empty:
-            messagebox.showerror("No Data", f"No data found for {agent} agent.")
+            messagebox.showerror(
+                "No Data", f"No data found for {agent} agent.")
             return
 
-        x_col = "Run" if agent == "dynamic" else ("Max Depth" if agent == "depth" else "Noise Level")
+        x_col = "Run" if agent == "dynamic" else (
+            "Max Depth" if agent == "depth" else "Noise Level")
         plt.figure(figsize=(8, 5))
-        sns.lineplot(data=df, x=x_col, y="Path Length", errorbar="sd", label=agent.capitalize())
-        self.save_and_show_plot(agent, f"Path Length vs {x_col}", f"path_vs_{x_col.lower()}.png", is_benchmark)
+        sns.lineplot(data=df, x=x_col, y="Path Length",
+                     errorbar="sd", label=agent.capitalize())
+        self.save_and_show_plot(
+            agent, f"Path Length vs {x_col}", f"path_vs_{x_col.lower()}.temp.png", is_benchmark)
 
     def plot_success_rate(self, is_benchmark):
         """
@@ -134,14 +143,18 @@ class MetricsVisualizer:
         agent = self.selected_agent.get()
         df = self.load_all_data(agent, is_benchmark)
         if df.empty:
-            messagebox.showerror("No Data", f"No data found for {agent} agent.")
+            messagebox.showerror(
+                "No Data", f"No data found for {agent} agent.")
             return
 
-        x_col = "Run" if agent == "dynamic" else ("Max Depth" if agent == "depth" else "Noise Level")
+        x_col = "Run" if agent == "dynamic" else (
+            "Max Depth" if agent == "depth" else "Noise Level")
         plt.figure(figsize=(8, 5))
-        sns.lineplot(data=df, x=x_col, y="Success_Bool", errorbar="sd", label=agent.capitalize())
+        sns.lineplot(data=df, x=x_col, y="Success_Bool",
+                     errorbar="sd", label=agent.capitalize())
         plt.ylabel("Success Rate")
-        self.save_and_show_plot(agent, f"Success Rate vs {x_col}", f"success_vs_{x_col.lower()}.png", is_benchmark)
+        self.save_and_show_plot(
+            agent, f"Success Rate vs {x_col}", f"success_vs_{x_col.lower()}.temp.png", is_benchmark)
 
     def plot_nodes_explored(self, is_benchmark):
         """
@@ -150,13 +163,17 @@ class MetricsVisualizer:
         agent = self.selected_agent.get()
         df = self.load_all_data(agent, is_benchmark)
         if df.empty:
-            messagebox.showerror("No Data", f"No data found for {agent} agent.")
+            messagebox.showerror(
+                "No Data", f"No data found for {agent} agent.")
             return
 
-        x_col = "Run" if agent == "dynamic" else ("Max Depth" if agent == "depth" else "Noise Level")
+        x_col = "Run" if agent == "dynamic" else (
+            "Max Depth" if agent == "depth" else "Noise Level")
         plt.figure(figsize=(8, 5))
-        sns.lineplot(data=df, x=x_col, y="Nodes Explored", errorbar="sd", label=agent.capitalize())
-        self.save_and_show_plot(agent, f"Nodes Explored vs {x_col}", f"nodes_vs_{x_col.lower()}.png", is_benchmark)
+        sns.lineplot(data=df, x=x_col, y="Nodes Explored",
+                     errorbar="sd", label=agent.capitalize())
+        self.save_and_show_plot(
+            agent, f"Nodes Explored vs {x_col}", f"nodes_vs_{x_col.lower()}.temp.png", is_benchmark)
 
     def compare_plot(self, metric, is_benchmark):
         """
@@ -167,14 +184,17 @@ class MetricsVisualizer:
             df = self.load_all_data(agent, is_benchmark)
             if df.empty:
                 continue
-            x_col = "Run" if agent == "dynamic" else ("Max Depth" if agent == "depth" else "Noise Level")
-            sns.lineplot(data=df, x=x_col, y=metric, errorbar="sd", label=agent.capitalize())
+            x_col = "Run" if agent == "dynamic" else (
+                "Max Depth" if agent == "depth" else "Noise Level")
+            sns.lineplot(data=df, x=x_col, y=metric,
+                         errorbar="sd", label=agent.capitalize())
 
         label = "Success Rate" if metric == "Success_Bool" else metric
         if metric == "Success_Bool":
             plt.ylabel("Success Rate")
 
-        self.save_and_show_plot("compare", f"{label} Comparison", f"compare_{metric.lower()}.png", is_benchmark)
+        self.save_and_show_plot(
+            "compare", f"{label} Comparison", f"compare_{metric.lower()}.temp.png", is_benchmark)
 
     def export_all_plots_pdf(self, is_benchmark):
         """
@@ -183,11 +203,14 @@ class MetricsVisualizer:
         agent = self.selected_agent.get()
         df = self.load_all_data(agent, is_benchmark)
         if df.empty:
-            messagebox.showerror("No Data", f"No data found for {agent} agent.")
+            messagebox.showerror(
+                "No Data", f"No data found for {agent} agent.")
             return
 
-        x_col = "Run" if agent == "dynamic" else ("Max Depth" if agent == "depth" else "Noise Level")
-        pdf_path = os.path.join(METRICS_DIR, agent, "benchmark_data" if is_benchmark else "", "graphs", "summary_report.pdf")
+        x_col = "Run" if agent == "dynamic" else (
+            "Max Depth" if agent == "depth" else "Noise Level")
+        pdf_path = os.path.join(
+            config.METRICS_DIR, agent, "benchmark_data" if is_benchmark else "", "graphs", "summary_report.temp.pdf")
         os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
 
         with PdfPages(pdf_path) as pdf:
@@ -199,7 +222,8 @@ class MetricsVisualizer:
                 plt.figure(figsize=(8, 5))
                 if y_col == "Success_Bool":
                     plt.ylabel("Success Rate")
-                sns.lineplot(data=df, x=x_col, y=y_col, errorbar="sd", label=agent.capitalize())
+                sns.lineplot(data=df, x=x_col, y=y_col,
+                             errorbar="sd", label=agent.capitalize())
                 plt.title(title)
                 plt.legend()
                 plt.grid(True)
@@ -214,10 +238,12 @@ class MetricsVisualizer:
         Opens the generated PDF report in the system's default viewer.
         """
         agent = self.selected_agent.get()
-        pdf_path = os.path.join(METRICS_DIR, agent, "benchmark_data" if is_benchmark else "", "graphs", "summary_report.pdf")
+        pdf_path = os.path.join(
+            config.METRICS_DIR, agent, "benchmark_data" if is_benchmark else "", "graphs", "summary_report.temp.pdf")
 
         if not os.path.exists(pdf_path):
-            messagebox.showerror("Not Found", f"No PDF report found for {agent} agent.")
+            messagebox.showerror(
+                "Not Found", f"No PDF report found for {agent} agent.")
             return
 
         try:
@@ -229,7 +255,6 @@ class MetricsVisualizer:
                 subprocess.run(["xdg-open", pdf_path])
         except Exception as e:
             messagebox.showerror("Error", f"Could not open PDF: {e}")
-
 
 
 if __name__ == "__main__":

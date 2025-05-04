@@ -1,14 +1,11 @@
 import os
 import csv
 import shutil
+import config
 from datetime import datetime
 
 # Keep track of which files have already been checked for archiving
 cleared_files = set()
-
-# Resolve the working directory so relative paths always work, even when called from outside the src folder
-SRC_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(SRC_DIR, "data")
 
 
 def Log_Path_Metrics(
@@ -36,18 +33,20 @@ def Log_Path_Metrics(
     today_str = now.strftime("%Y-%m-%d")
     timestamp_str = now.strftime("%Y-%m-%d %H:%M:%S")
 
-    agent_folder = os.path.join(DATA_DIR, "metrics", Agent_Type.lower())
+    agent_folder = f"{config.DATA_DIR}/metrics/{Agent_Type.lower()}"
 
     if is_benchmark:
         if not benchmark_name:
-            raise ValueError("Must provide benchmark_name when is_benchmark=True")
+            raise ValueError(
+                "Must provide benchmark_name when is_benchmark=True")
 
         filename = f"{benchmark_name}_{Agent_Type.lower()}_metrics.csv"
         filepath = os.path.join(agent_folder, "benchmark_data", filename)
         graph_folder = os.path.join(agent_folder, "benchmark_data", "graphs")
 
     else:
-        filepath = os.path.join(agent_folder, f"{today_str}_{Agent_Type.lower()}_metrics.csv")
+        filepath = os.path.join(
+            agent_folder, f"{today_str}_{Agent_Type.lower()}_metrics.temp.csv")
         archive_folder = os.path.join(agent_folder, "archive")
         os.makedirs(archive_folder, exist_ok=True)
 
@@ -60,7 +59,7 @@ def Log_Path_Metrics(
             if modified_time.date() != now.date():
                 archived_name = os.path.join(
                     archive_folder,
-                    f"{modified_time.strftime('%Y-%m-%d_%H-%M-%S')}_{Agent_Type.lower()}_metrics.csv"
+                    f"{modified_time.strftime('%Y-%m-%d_%H-%M-%S')}_{Agent_Type.lower()}_metrics.temp.csv"
                 )
                 shutil.move(filepath, archived_name)
                 cleared_files.discard(filepath)
@@ -69,7 +68,8 @@ def Log_Path_Metrics(
     # Count walls and compute path stats
     walls = sum(row.count(1) for row in grid)
     path_length = len(path) if path else -1
-    search_time_micro = int(Search_Time * 1_000_000) if Search_Time is not None else "N/A"
+    search_time_micro = int(
+        Search_Time * 1_000_000) if Search_Time is not None else "N/A"
 
     row_data = {
         "Timestamp": timestamp_str,

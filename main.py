@@ -1,6 +1,7 @@
 import pygame
 import sys
 import random
+import os
 
 import config
 from tilemap import load_tileset
@@ -16,7 +17,8 @@ from ui.draw_side_panel import draw_side_panel
 # Pygame setup
 pygame.init()
 config.setup_fonts()
-screen = pygame.display.set_mode((config.Screen_Width + 400, config.Screen_Height))
+screen = pygame.display.set_mode(
+    (config.Screen_Width + 400, config.Screen_Height))
 pygame.display.set_caption("Lookahead Strategy Simulation")
 clock = pygame.time.Clock()
 
@@ -24,16 +26,20 @@ clock = pygame.time.Clock()
 tileset = load_tileset(config.TILESET_PATH, config.TILESET_TILE_SIZE)
 
 # Load animated coin frames (8 frames, 32x32 each)
-coin_sheet = pygame.image.load("src/assets/images/icons/coin/coin_gold.png").convert_alpha()
-coin_frames = [coin_sheet.subsurface(pygame.Rect(i * 32, 0, 32, 32)) for i in range(8)]
+coin_sheet = pygame.image.load(
+    f"{config.ASSETS_DIR}/images/icons/coin/coin_gold.png").convert_alpha()
+coin_frames = [coin_sheet.subsurface(
+    pygame.Rect(i * 32, 0, 32, 32)) for i in range(8)]
 coin_anim_index = 0
 coin_anim_speed = 0.1
 
 # Load player directional animations
-player_sheet = pygame.image.load("src/assets/images/player/player_model.png").convert_alpha()
+player_sheet = pygame.image.load(
+    f"{config.ASSETS_DIR}/images/player/player_model.png").convert_alpha()
 direction_rows = {"down": 0, "left": 3, "right": 2, "up": 1}
 player_frames = {
-    direction: [player_sheet.subsurface(pygame.Rect(i * 16, row * 16, 16, 16)) for i in range(4)]
+    direction: [player_sheet.subsurface(pygame.Rect(
+        i * 16, row * 16, 16, 16)) for i in range(4)]
     for direction, row in direction_rows.items()
 }
 
@@ -95,7 +101,8 @@ while running:
                             screen_mode = "simulation"
                         elif action.startswith("benchmark"):
                             key = action.replace("benchmark", "")
-                            name = {"1": "easy", "2": "medium", "3": "true_maze"}.get(key, "easy")
+                            name = {"1": "easy", "2": "medium",
+                                    "3": "true_maze"}.get(key, "easy")
                             controller.clear_simulation_notifications()
                             controller.load_benchmark_map(name)
                             screen_mode = "simulation"
@@ -106,17 +113,20 @@ while running:
 
     elif screen_mode == "simulation":
         # Update coin animation
-        coin_anim_index = (coin_anim_index + coin_anim_speed) % len(coin_frames)
+        coin_anim_index = (coin_anim_index +
+                           coin_anim_speed) % len(coin_frames)
         controller.update_notification_timer()
         screen.fill(config.Background_Color)
 
         # Draw grid, trail, agent, UI, and hover effects
         controller.grid.trail_tiles = controller.trail_tiles
-        controller.grid.draw(screen, tileset, coin_frames, coin_anim_index, controller.animation_active)
+        controller.grid.draw(screen, tileset, coin_frames,
+                             coin_anim_index, controller.animation_active)
         draw_trail(screen, tileset, controller.trail_tiles)
         draw_agent(screen, player_frames, controller)
         back_button_rect = draw_side_panel(screen, controller)
-        draw_hover_highlight(screen, tileset, coin_frames, player_frames, coin_anim_index, controller)
+        draw_hover_highlight(screen, tileset, coin_frames,
+                             player_frames, coin_anim_index, controller)
 
         pygame.display.flip()
 
