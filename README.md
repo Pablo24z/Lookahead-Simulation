@@ -2,95 +2,133 @@
 
 ## Overview
 
-This project is a Python-based simulation tool designed to explore how lookahead strategies perform in dynamic grid environments. The simulation allows a user to select between different agent types, each employing a different lookahead method to find paths from a start to an end position across a customizable grid. The tool is particularly useful for studying decision-making under uncertainty, pathfinding efficiency, and the limitations of different search strategies.
+This Python-based simulation platform has been designed to analyse how different lookahead agents perform when navigating a grid world under varying conditions — including uncertainty, constraints, and dynamic updates. The tool offers a hands-on visual interface and thorough logging system, making it ideal for academic experimentation and demonstration.
 
-## Features
+It was built with a strong emphasis on reproducibility, clarity of logic, and high-quality visualisation of agent behaviour. The interface allows users to interactively test and compare the performance of several decision-making strategies, all in real time.
 
-- **Multiple Agents**:
-  - **Depth-Limited Lookahead**: Explores to a maximum depth limit.
-  - **Noisy Heuristic Lookahead**: Adds noise to the heuristic to simulate real-world uncertainty.
-  - **Dynamic Environment Lookahead**: Handles grid updates in real-time.
+## Key Features
 
-- **Grid Editing**:
-  - Manual or random placement of walls.
-  - Set custom start and end points.
+### Multiple Agent Strategies
 
-- **Pathfinding Metrics**:
-  - Nodes explored.
-  - Path length.
-  - Search time (measured precisely in microseconds).
+- **Depth-Limited Agent**: Explores only up to a defined depth — useful for modelling cognitive limitations.
+- **Noisy Heuristic Agent**: Adds probabilistic variation to the heuristic, simulating uncertainty and imperfect perception.
+- **Dynamic Agent**: Designed to handle real-time changes in the environment, rerouting if the world is altered mid-search.
 
-- **Data Logging**:
-  - Results are logged in a clean directory structure.
-  - Separate folders for each agent type (`depth`, `noise`, `dynamic`) under `data/metrics/`.
-  - Old metric files are automatically archived for historical comparison.
+### Interactive Grid Editor
 
-- **User Interface**:
-  - Intuitive mouse and keyboard controls.
-  - Visual feedback with clear color coding.
-  - Animated path traversal after successful searches.
+- Draw and remove walls manually, or place them randomly.
+- Define custom start and end tiles.
+- Live feedback when tiles are invalid (e.g. too close, blocked).
 
-- **Performance Considerations**:
-  - Efficiently handles grids of moderate size.
-  - Updates and redraws handled at 120 FPS for smoothness.
+### In-Depth Metrics Logging
+
+- Path length.
+- Nodes explored.
+- Time taken (measured precisely in microseconds).
+- Success status and seed tracking.
+- All results stored cleanly under `data/metrics/{agent}/...`.
+
+Benchmark runs are also supported and stored separately for controlled testing.
+
+### Simulation Visuals
+
+- Live animation of the agent traversing its discovered path.
+- Smooth path transitions using interpolation.
+- Hover previews for wall, start, and goal placement.
+- Status panel showing real-time values (agent type, wall count, path length, etc.).
+- Colour-coded notifications that now intelligently reflect dynamic updates.
+
+### Graphical Metrics Visualiser
+
+- **Built-in GUI tool** (`visualiser.py`) to explore logged results.
+- Compare agents on metrics like path length, success rate, and nodes explored.
+- Automatically export graphs and summaries to PDF for academic reporting.
+- Manual button now available to open the PDF immediately after export.
 
 ## Controls
 
-- `SPACE`: Switch between Wall/Start/End placement mode.
-- `ENTER`: Run the selected pathfinding simulation.
-- `D`: Trigger a dynamic environment update (only available for Dynamic Lookahead agent).
-- `Left Click`: Place walls, start, or end points.
-- `Right Click`: Remove walls.
+| Key / Action       | Function                                          |
+|--------------------|---------------------------------------------------|
+| `SPACE`            | Toggle between Wall, Start, and End modes         |
+| `ENTER`            | Run the simulation for the current agent          |
+| `D`                | Trigger a dynamic environment update *(Dynamic Agent only)* |
+| Left Click         | Place wall/start/end depending on active mode     |
+| Right Click        | Remove wall at clicked location                   |
+| Click "Back"       | Return to the agent configuration screen          |
 
-## Installation
+## Running the Project
 
-1. Ensure you have Python 3.8+ installed.
-2. Install required libraries:
-```bash
-pip install pygame
+1. **Install Requirements**  
+   You'll need Python 3.8 or higher and the following libraries:
+   ```bash
+   pip install pygame seaborn matplotlib pandas tqdm
+   ```
+
+2. **Launch the Simulation**
+   ```bash
+   python main.py
+   ```
+
+3. **Run Benchmarks**
+   To automate a batch of simulation runs:
+   ```bash
+   python run_benchmarks.py --agent depth --benchmark easy --runs 5
+   ```
+
+4. **Launch the Metrics Visualiser**
+   ```bash
+   python visualiser.py
+   ```
+
+## Folder Structure (Updated)
+
 ```
-3. Run the simulation:
-```bash
-python main.py
+src/
+
+  main.py                     # Main simulation entry point
+  config.py                   # Constants for layout, colours, fonts
+  simulation_controller.py    # Central logic + animation manager
+  lookahead.py                # A* search with optional noise and depth limit
+  metrics.py                  # CSV + benchmarking logger
+  run_benchmarks.py           # CLI-based benchmark runner
+  visualiser.py               # Tkinter GUI for metric comparison and PDF export
+
+  gridworld.py                # Grid data structure + draw logic
+  tilemap.py                  # Tileset loader and slicer
+
+  ui/
+    draw_agent.py
+    draw_trail.py
+    draw_side_panel.py
+    hover_highlight.py
+    ui_screens.py
+
+  utils/
+    game_state.py
+    map_utils.py
+
+  data/
+    maps/                   # Benchmark maps (.json)
+    metrics/                # All run logs (auto-structured)
+    assets/                     # Sprites + fonts
 ```
 
-## Folder Structure
+## Academic Intent
 
-```
-assets/fonts/             # Font resources
-config.py                 # Color schemes, font setup
-main.py                   # Main execution file
-lookahead.py              # A* Search algorithm with optional depth/noise
-metrics.py                # Data logging and management
-ui_screens.py             # Start and instruction screen handling
-gridworld.py              # Grid management
-README.md                 # This file
-data/metrics/             # Output folders for metric logs
-```
+This simulation has been crafted to:
 
-## Academic Focus
+- Evaluate how imperfect or constrained planning affects agent performance.
+- Support experimental analysis through tightly controlled benchmark testing.
+- Offer clean visual output and real-time interactivity suitable for both demonstrations and deeper exploration.
 
-This project aims to:
-- Provide empirical insight into how limited lookahead depth and heuristic noise affect search efficiency.
-- Allow users to simulate dynamic environments where obstacles can appear mid-search.
-- Generate reproducible metrics for analysis, supporting research on decision-making algorithms.
+The code is thoroughly modular to support future extensions, such as learning agents, adaptive noise, or probabilistic obstacle generation.
 
-The tool is crafted with careful emphasis on:
-- Correctness of the search implementations.
-- Robust data collection.
-- Smooth and responsive user interaction.
-- Professional project organization.
+## Future Considerations
 
-## Future Enhancements
+- Smarter wall generation with configurable density distributions.
+- Visual overlays for explored nodes and frontiers.
+- Extension into probabilistic planning domains (e.g. partially observable maps).
+- Modular support for reinforcement learning baselines.
 
-- Visual upgrades (e.g., sprite-based rendering for walls/start/end tiles).
-- Smarter dynamic updates with probability-based wall placements.
-- Agent personality visualization based on strategy.
-
----
-
-
-**Author**: Joseph Adeyeye (21355389) - Manchester Metropolitan University
-
-**Last Updated**: April 2025
-
+**Author**: Joseph Adeyeye (21355389)
+**Institution**: Manchester Metropolitan University

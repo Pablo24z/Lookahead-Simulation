@@ -1,25 +1,26 @@
 import pygame
 
-# --- Screen ---
-Tile_Size = 40
-Grid_Width = 15
-Grid_Height = 15
-Screen_Width = 1000
-Screen_Height = 800
-Status_Bar_Height = 40
+# Grid and display settings
+Tile_Size = 40             # In-game tile size (scaled from sprite)
+Grid_Width = 15            # Number of columns
+Grid_Height = 15           # Number of rows
+Screen_Width = 1000        # Width of the game window
+Screen_Height = 800        # Height of the game window
 
-# Seed
-Global_Seed = None
+# Reproducibility
+Global_Seed = None         # Set this to fix randomness for repeatable results
 
-# Asset paths
-TILESET_PATH = "assets/images/tiles/forest/forest_tileset.png"
-TILE_SIZE = 16
+# File paths for assets
+TILESET_TILE_SIZE = 16     # Raw sprite size in tileset (usually 16x16)
+TILESET_PATH = "src/assets/images/tiles/forest/forest_tileset.png"
 
-# Trail
+FONT_BOLD_PATH = "src/assets/fonts/RobotoMono-Bold.ttf"
+FONT_REGULAR_PATH = "src/assets/fonts/RobotoMono-Regular.ttf"
+
+# Trail tile indices for path visuals
 trail_tileset_indices = {
     "vertical": 128,
     "horizontal": 112,
-
     "up_right": 111,
     "right_up": 147,
     "right_down": 113,
@@ -30,10 +31,7 @@ trail_tileset_indices = {
     "up_left": 113,
 }
 
-
-
-
-# --- Colors ---
+# Colour definitions (RGB)
 White = (255, 255, 255)
 Black = (0, 0, 0)
 Grey = (200, 200, 200)
@@ -41,23 +39,23 @@ Light_Grey = (150, 150, 150)
 Green = (0, 255, 0)
 Red = (255, 0, 0)
 Blue = (50, 100, 255)
+
 Orange = (249, 168, 37)
 Light_Orange = (255, 204, 77)
 Background_Color = (30, 30, 30)
 
-# --- Font paths ---
-FONT_BOLD_PATH = "assets/fonts/RobotoMono-Bold.ttf"
-FONT_REGULAR_PATH = "assets/fonts/RobotoMono-Regular.ttf"
-
-# --- Fonts (initially empty) ---
+# Font references (set during initialisation)
 FONT_BOLD_50 = None
 FONT_BOLD_40 = None
 FONT_BOLD_28 = None
 FONT_REGULAR_26 = None
 FONT_REGULAR_24 = None
 
-# --- Setup function to initialize fonts AFTER pygame.init() ---
 def setup_fonts():
+    """
+    Loads font assets after pygame is initialised.
+    Falls back to default system fonts if loading fails.
+    """
     global FONT_BOLD_50, FONT_BOLD_40, FONT_BOLD_28, FONT_REGULAR_26, FONT_REGULAR_24
     try:
         FONT_BOLD_50 = pygame.font.Font(FONT_BOLD_PATH, 50)
@@ -66,7 +64,6 @@ def setup_fonts():
         FONT_REGULAR_26 = pygame.font.Font(FONT_REGULAR_PATH, 26)
         FONT_REGULAR_24 = pygame.font.Font(FONT_REGULAR_PATH, 24)
     except Exception:
-        # Fallback to default system font if loading fails
         FONT_BOLD_50 = pygame.font.SysFont(None, 50)
         FONT_BOLD_40 = pygame.font.SysFont(None, 40)
         FONT_BOLD_28 = pygame.font.SysFont(None, 28)

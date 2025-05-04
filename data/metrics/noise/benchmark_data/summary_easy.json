@@ -1,245 +1,168 @@
 {
     "agent": "noise",
     "benchmark": "easy",
-    "runs": 33,
-    "successes": 33,
+    "runs": 22,
+    "successes": 22,
     "success_rate": 1.0,
-    "avg_path_length": 27.24,
-    "avg_nodes_explored": 38.09,
-    "avg_search_time_sec": 0.000225,
-    "seed_base": 51,
-    "timestamp": "2025-05-03T22:24:22",
+    "avg_path_length": 27.73,
+    "avg_nodes_explored": 41.18,
+    "avg_search_time_sec": 0.000224,
+    "seed_base": 41,
+    "timestamp": "2025-05-04T02:07:52",
     "seed_results": [
         {
-            "seed": 51,
+            "seed": 41,
             "success": true,
             "path_length": 27,
             "nodes_explored": 43,
-            "search_time_sec": 0.000212
+            "search_time_sec": 0.000213
         },
         {
-            "seed": 52,
+            "seed": 42,
             "success": true,
             "path_length": 27,
             "nodes_explored": 43,
-            "search_time_sec": 0.000197
-        },
-        {
-            "seed": 53,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 43,
-            "search_time_sec": 0.000222
-        },
-        {
-            "seed": 1051,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 28,
-            "search_time_sec": 0.000163
-        },
-        {
-            "seed": 1052,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 31,
-            "search_time_sec": 0.000153
-        },
-        {
-            "seed": 1053,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 28,
-            "search_time_sec": 0.000149
-        },
-        {
-            "seed": 2051,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 32,
-            "search_time_sec": 0.000202
-        },
-        {
-            "seed": 2052,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 30,
-            "search_time_sec": 0.000147
-        },
-        {
-            "seed": 2053,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 38,
-            "search_time_sec": 0.000214
-        },
-        {
-            "seed": 3051,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 41,
-            "search_time_sec": 0.000233
-        },
-        {
-            "seed": 3052,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 33,
-            "search_time_sec": 0.000212
-        },
-        {
-            "seed": 3053,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 32,
-            "search_time_sec": 0.000247
-        },
-        {
-            "seed": 4051,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 35,
             "search_time_sec": 0.0002
         },
         {
-            "seed": 4052,
+            "seed": 1041,
             "success": true,
             "path_length": 27,
-            "nodes_explored": 37,
-            "search_time_sec": 0.000196
+            "nodes_explored": 28,
+            "search_time_sec": 0.000167
         },
         {
-            "seed": 4053,
+            "seed": 1042,
             "success": true,
             "path_length": 27,
-            "nodes_explored": 38,
-            "search_time_sec": 0.000183
-        },
-        {
-            "seed": 5051,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 37,
-            "search_time_sec": 0.000464
-        },
-        {
-            "seed": 5052,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 39,
-            "search_time_sec": 0.000191
-        },
-        {
-            "seed": 5053,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 38,
-            "search_time_sec": 0.000178
-        },
-        {
-            "seed": 6051,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 40,
-            "search_time_sec": 0.00021
-        },
-        {
-            "seed": 6052,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 37,
-            "search_time_sec": 0.000391
-        },
-        {
-            "seed": 6053,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 49,
-            "search_time_sec": 0.000285
-        },
-        {
-            "seed": 7051,
-            "success": true,
-            "path_length": 29,
-            "nodes_explored": 54,
-            "search_time_sec": 0.000645
-        },
-        {
-            "seed": 7052,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 41,
-            "search_time_sec": 0.0002
-        },
-        {
-            "seed": 7053,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 39,
-            "search_time_sec": 0.000178
-        },
-        {
-            "seed": 8051,
-            "success": true,
-            "path_length": 31,
-            "nodes_explored": 51,
-            "search_time_sec": 0.000254
-        },
-        {
-            "seed": 8052,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 36,
-            "search_time_sec": 0.000171
-        },
-        {
-            "seed": 8053,
-            "success": true,
-            "path_length": 29,
-            "nodes_explored": 47,
-            "search_time_sec": 0.000267
-        },
-        {
-            "seed": 9051,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 39,
-            "search_time_sec": 0.000175
-        },
-        {
-            "seed": 9052,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 35,
-            "search_time_sec": 0.00017
-        },
-        {
-            "seed": 9053,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 38,
-            "search_time_sec": 0.000216
-        },
-        {
-            "seed": 10051,
-            "success": true,
-            "path_length": 27,
-            "nodes_explored": 32,
+            "nodes_explored": 29,
             "search_time_sec": 0.000158
         },
         {
-            "seed": 10052,
+            "seed": 2041,
             "success": true,
             "path_length": 27,
-            "nodes_explored": 39,
+            "nodes_explored": 37,
             "search_time_sec": 0.000181
         },
         {
-            "seed": 10053,
+            "seed": 2042,
             "success": true,
             "path_length": 27,
-            "nodes_explored": 34,
-            "search_time_sec": 0.000159
+            "nodes_explored": 29,
+            "search_time_sec": 0.000154
+        },
+        {
+            "seed": 3041,
+            "success": true,
+            "path_length": 27,
+            "nodes_explored": 30,
+            "search_time_sec": 0.000224
+        },
+        {
+            "seed": 3042,
+            "success": true,
+            "path_length": 27,
+            "nodes_explored": 32,
+            "search_time_sec": 0.000157
+        },
+        {
+            "seed": 4041,
+            "success": true,
+            "path_length": 27,
+            "nodes_explored": 51,
+            "search_time_sec": 0.000348
+        },
+        {
+            "seed": 4042,
+            "success": true,
+            "path_length": 27,
+            "nodes_explored": 33,
+            "search_time_sec": 0.000169
+        },
+        {
+            "seed": 5041,
+            "success": true,
+            "path_length": 27,
+            "nodes_explored": 43,
+            "search_time_sec": 0.000189
+        },
+        {
+            "seed": 5042,
+            "success": true,
+            "path_length": 27,
+            "nodes_explored": 33,
+            "search_time_sec": 0.000177
+        },
+        {
+            "seed": 6041,
+            "success": true,
+            "path_length": 31,
+            "nodes_explored": 38,
+            "search_time_sec": 0.00017
+        },
+        {
+            "seed": 6042,
+            "success": true,
+            "path_length": 27,
+            "nodes_explored": 43,
+            "search_time_sec": 0.00022
+        },
+        {
+            "seed": 7041,
+            "success": true,
+            "path_length": 31,
+            "nodes_explored": 49,
+            "search_time_sec": 0.000247
+        },
+        {
+            "seed": 7042,
+            "success": true,
+            "path_length": 27,
+            "nodes_explored": 56,
+            "search_time_sec": 0.000256
+        },
+        {
+            "seed": 8041,
+            "success": true,
+            "path_length": 27,
+            "nodes_explored": 49,
+            "search_time_sec": 0.000299
+        },
+        {
+            "seed": 8042,
+            "success": true,
+            "path_length": 29,
+            "nodes_explored": 62,
+            "search_time_sec": 0.000283
+        },
+        {
+            "seed": 9041,
+            "success": true,
+            "path_length": 27,
+            "nodes_explored": 41,
+            "search_time_sec": 0.000244
+        },
+        {
+            "seed": 9042,
+            "success": true,
+            "path_length": 29,
+            "nodes_explored": 56,
+            "search_time_sec": 0.000315
+        },
+        {
+            "seed": 10041,
+            "success": true,
+            "path_length": 31,
+            "nodes_explored": 52,
+            "search_time_sec": 0.000234
+        },
+        {
+            "seed": 10042,
+            "success": true,
+            "path_length": 27,
+            "nodes_explored": 29,
+            "search_time_sec": 0.000326
         }
     ]
 }

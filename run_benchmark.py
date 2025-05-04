@@ -12,26 +12,38 @@ from gridworld import GridWorld
 from lookahead import A_Star_Search
 from metrics import Log_Path_Metrics
 
+# Define filepaths for each benchmark map
 BENCHMARK_MAP_PATHS = {
-    "easy": "data/maps/map_easy.json",
-    "medium": "data/maps/map_medium.json",
-    "true_maze": "data/maps/map_true_maze.json"
+    "easy": "src/data/maps/map_easy.json",
+    "medium": "src/data/maps/map_medium.json",
+    "true_maze": "src/data/maps/map_true_maze.json"
 }
 
 DEFAULT_DEPTH_RANGE = (5, 35)
 DEFAULT_NOISE_RANGE = (0, 10)
 
+
 def run_simulation(agent_type, grid, start, end, depth=None, noise=None, seed=None, benchmark_name=None):
+    """
+    Runs a single simulation with the specified agent and parameters.
+
+    Records the result to a CSV file using Log_Path_Metrics and returns summary info.
+
+    Returns:
+        dict: Contains success status, path length, nodes explored, search time, and seed used.
+    """
     if seed is not None:
         random.seed(seed)
 
     start_time = time.perf_counter()
+
     if agent_type == "depth":
         path, explored = A_Star_Search(grid, start, end, Max_Depth=depth)
     elif agent_type == "noise":
         path, explored = A_Star_Search(grid, start, end, Noise_Level=noise)
     else:
         path, explored = A_Star_Search(grid, start, end)
+
     end_time = time.perf_counter()
     duration = end_time - start_time
 
@@ -61,20 +73,26 @@ def run_simulation(agent_type, grid, start, end, depth=None, noise=None, seed=No
         "search_time_sec": round(duration, 6)
     }
 
+
 def run_batch(args):
+    """
+    Runs a full batch of benchmark simulations for the given agent and settings.
+
+    Aggregates and prints performance metrics, and saves them as a JSON summary.
+    """
     benchmark_path = BENCHMARK_MAP_PATHS[args.benchmark]
     map_data = load_full_map(benchmark_path)
 
     grid_data = map_data["grid"]
     start = tuple(map_data["start"])
     end = tuple(map_data["end"])
-    rows = len(grid_data)
-    cols = len(grid_data[0])
+    rows, cols = len(grid_data), len(grid_data[0])
 
     print(f"\n[~] Starting benchmark for agent: {args.agent} | Map: {args.benchmark} | Runs: {args.runs}")
 
     summary_results = []
 
+    # Loop for depth-limited agent
     if args.agent == "depth":
         for depth in range(args.min_depth, args.max_depth + 1):
             print(f"  [Depth = {depth}]")
@@ -85,6 +103,7 @@ def run_batch(args):
                 result = run_simulation("depth", grid.grid, start, end, depth=depth, seed=seed, benchmark_name=args.benchmark)
                 summary_results.append(result)
 
+    # Loop for noisy heuristic agent
     elif args.agent == "noise":
         for noise in range(args.min_noise, args.max_noise + 1):
             print(f"  [Noise = {noise}]")
@@ -95,6 +114,7 @@ def run_batch(args):
                 result = run_simulation("noise", grid.grid, start, end, noise=noise, seed=seed, benchmark_name=args.benchmark)
                 summary_results.append(result)
 
+    # Loop for dynamic environment agent
     elif args.agent == "dynamic":
         for run_id in tqdm(range(args.runs), desc="  Dynamic Runs"):
             grid = GridWorld(cols, rows)
@@ -105,6 +125,7 @@ def run_batch(args):
 
     print("\n[✓] Benchmark complete!")
 
+    # Aggregate results
     successes = [r for r in summary_results if r["success"]]
     avg_path_len = round(mean([r["path_length"] for r in successes]), 2) if successes else 0
     avg_nodes = round(mean([r["nodes_explored"] for r in summary_results]), 2)
@@ -124,13 +145,26 @@ def run_batch(args):
         "seed_results": summary_results
     }
 
-    json_folder = os.path.join("data", "metrics", args.agent, "benchmark_data")
+    # Save benchmark summary to JSON
+    json_folder = os.path.join("src", "data", "metrics", args.agent, "benchmark_data")
     os.makedirs(json_folder, exist_ok=True)
     json_path = os.path.join(json_folder, f"summary_{args.benchmark}.json")
     with open(json_path, "w") as f:
         json.dump(summary, f, indent=4)
 
-    print(f"\nAgent: {args.agent}\nBenchmark: {args.benchmark}\nTotal runs: {summary['runs']}\nSuccesses: {summary['successes']}\nSuccess rate: {summary['success_rate']}\nAvg path length: {avg_path_len}\nAvg nodes explored: {avg_nodes}\nAvg search time sec: {avg_time}\nSeed base: {args.seed}")
+    # Print summary to terminal
+    print(f"""
+Agent: {args.agent}
+Benchmark: {args.benchmark}
+Total runs: {summary['runs']}
+Successes: {summary['successes']}
+Success rate: {summary['success_rate']}
+Avg path length: {avg_path_len}
+Avg nodes explored: {avg_nodes}
+Avg search time sec: {avg_time}
+Seed base: {args.seed}
+""")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run benchmark simulations for lookahead agents.")

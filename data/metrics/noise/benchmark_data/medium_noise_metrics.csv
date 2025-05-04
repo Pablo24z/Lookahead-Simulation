@@ -1,0 +1,2 @@
+Timestamp,Start,End,Walls,Path Length,Agent Type,Noise Level,Max Depth,Success,Nodes Explored,Search Time (μs),Seed
+2025-05-04 04:28:52,"(0, 0)","(14, 14)",95,41,Noise,5,N/A,Yes,96,474,N/A
