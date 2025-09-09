@@ -1,10 +1,24 @@
-# Lookahead Strategy Simulation
+# Lookahead Strategy Simulation (Grid World)
 
-## Overview
+Interactive Python simulator to compare **depth-limited**, **noisy-heuristic**, and **dynamic** planning agents in a grid world.
 
-This Python-based simulation platform has been designed to analyse how different lookahead agents perform when navigating a grid world under varying conditions — including uncertainty, constraints, and dynamic updates. The tool offers a hands-on visual interface and thorough logging system, making it ideal for academic experimentation and demonstration.
+## Highlights
+- **Live visuals:** animate paths; edit walls/start/goal interactively.
+- **Metrics:** path length, nodes explored, runtime (µs), success; CSV logs.
+- **Benchmarks:** batch runs with seeds; PDF graphs via visualiser.
+- **Reproducible:** clear config + deterministic seeds.
 
-It was built with a strong emphasis on reproducibility, clarity of logic, and high-quality visualisation of agent behaviour. The interface allows users to interactively test and compare the performance of several decision-making strategies, all in real time.
+## Tech
+`Python 3.10+`, `pygame`, `tkinter`, `pandas`, `matplotlib`.
+
+## Quick start
+```bash
+python -m venv venv
+# Windows: venv\Scripts\activate
+# macOS/Linux: source venv/bin/activate
+pip install -r requirements.txt
+python main.py
+
 
 ## Key Features
 
